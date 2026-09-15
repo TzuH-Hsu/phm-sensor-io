@@ -59,7 +59,6 @@ body:
       label: Area
       description: Primary domain (select all that apply)
       options:
+        - label: "area:driver — Bus drivers and device protocol implementations"
         - label: "area:docs — Documentation and guides"
-        - label: "area:skills — Skills knowledge modules"
         - label: "area:ci — CI workflows and automation"
-        - label: "area:governance — Labels, templates, metadata contract, process"
