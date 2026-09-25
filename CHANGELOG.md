@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.0...v0.2.1) (2026-09-25)
+
+
+### Bug Fixes
+
+* take the template's v0.5.5 labeler and check scripts ([#20](https://github.com/TzuH-Hsu/phm-sensor-io/issues/20)) ([1853380](https://github.com/TzuH-Hsu/phm-sensor-io/commit/1853380a6ebf5d227c0cb3c44625b0cab971f2af))
+
 ## [0.2.0](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.1.1...v0.2.0) (2026-09-21)
 
 
