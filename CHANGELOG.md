@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.1...v0.2.2) (2026-09-25)
+
+
+### Bug Fixes
+
+* enforce the licence allowlist instead of a copyleft denylist ([#23](https://github.com/TzuH-Hsu/phm-sensor-io/issues/23)) ([fcd885a](https://github.com/TzuH-Hsu/phm-sensor-io/commit/fcd885a50a31f7d9cbde7f86e66fdba7075be51a))
+
 ## [0.2.1](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.0...v0.2.1) (2026-09-25)
 
 
