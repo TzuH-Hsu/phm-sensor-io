@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.3...v0.2.4) (2026-09-25)
+
+
+### Bug Fixes
+
+* exclude GitHub Actions from the licence check and SBOM ([#29](https://github.com/TzuH-Hsu/phm-sensor-io/issues/29)) ([d50acf6](https://github.com/TzuH-Hsu/phm-sensor-io/commit/d50acf6676045d575a3ff40d5d7887dfe6876b67))
+
 ## [0.2.3](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.2...v0.2.3) (2026-09-25)
 
 
