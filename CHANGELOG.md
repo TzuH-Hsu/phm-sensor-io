@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.2...v0.2.3) (2026-09-25)
+
+
+### Bug Fixes
+
+* check nested submodules and accept permissive BSD variants ([#26](https://github.com/TzuH-Hsu/phm-sensor-io/issues/26)) ([41ccd18](https://github.com/TzuH-Hsu/phm-sensor-io/commit/41ccd18dd2beeffb4ae51ed14fd4192fa9c5272b))
+
 ## [0.2.2](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.1...v0.2.2) (2026-09-25)
 
 
