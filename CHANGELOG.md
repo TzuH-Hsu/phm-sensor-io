@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.4...v0.2.5) (2026-09-26)
+
+
+### Bug Fixes
+
+* switch off syft's Actions catalogers instead of excluding .github ([#32](https://github.com/TzuH-Hsu/phm-sensor-io/issues/32)) ([ee0fc89](https://github.com/TzuH-Hsu/phm-sensor-io/commit/ee0fc894e4c031ce857e3d68d2427627c5a58da8))
+
 ## [0.2.4](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.3...v0.2.4) (2026-09-25)
 
 
