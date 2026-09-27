@@ -10,13 +10,14 @@
   <a href="LICENSE"><img alt="License Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-D22128"></a>
   <img alt="Bus: Modbus RTU" src="https://img.shields.io/badge/Bus-Modbus%20RTU-1d76db">
   <img alt="Platform: Linux" src="https://img.shields.io/badge/Platform-Linux-0e8a16">
+  <img alt="C++20" src="https://img.shields.io/badge/C%2B%2B-20-00599C">
 </p>
 
 Reading industrial sensors on a Linux edge device is the same problem every time: frame a bus, map registers to named points, poll them on a schedule, decode and scale the values, and tell the caller when a reading cannot be trusted. `phm-sensor-io` is that layer, written once, with a clean seam between **how the bus works** and **what this particular deployment measures**.
 
 Modbus RTU is the first transport. The abstraction is written so that adding another bus does not change a single line in the code above it.
 
-> **Status: early.** The API is not stable; expect breaking changes before `v1.0`. Language and build system are being settled — see the open issues.
+> **Status: early.** The API is not stable; expect breaking changes before `v1.0`. Written in C++20 and built with CMake (Ninja generator).
 
 ## Design
 
