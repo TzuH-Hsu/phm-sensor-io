@@ -5,6 +5,15 @@ github-project-os template, measured against template v0.5.6 on 2026-09-28.
 On a sync, keep everything below; update this file in the same PR as any new
 deliberate difference.
 
+The comparison ref is not a normal tag. Fetch it once into its own namespace, so
+template tags never collide with this repository's version tags:
+
+```bash
+git remote add template https://github.com/TzuH-Hsu/github-project-os.git  # once
+git config remote.template.tagOpt --no-tags
+git fetch template '+refs/tags/v0.5.6:refs/template-tags/v0.5.6'
+```
+
 To re-check:
 
 ```bash
