@@ -1,7 +1,7 @@
 # Template drift
 
 This file lists every place this repository deliberately differs from the
-github-project-os template, measured against template v0.5.6 on 2026-09-28.
+github-project-os template, measured against template v0.5.7 on 2026-09-28 (re-baselined from v0.5.6 when v0.5.7 was taken).
 On a sync, keep everything below; update this file in the same PR as any new
 deliberate difference.
 
@@ -11,19 +11,19 @@ template tags never collide with this repository's version tags:
 ```bash
 git remote add template https://github.com/TzuH-Hsu/github-project-os.git  # once
 git config remote.template.tagOpt --no-tags
-git fetch template '+refs/tags/v0.5.6:refs/template-tags/v0.5.6'
+git fetch template '+refs/tags/v0.5.7:refs/template-tags/v0.5.7'
 ```
 
 To re-check:
 
 ```bash
-git ls-tree -r --name-only refs/template-tags/v0.5.6 > /tmp/template-files.txt
+git ls-tree -r --name-only refs/template-tags/v0.5.7 > /tmp/template-files.txt
 git ls-tree -r --name-only HEAD > /tmp/repo-files.txt
 diff /tmp/template-files.txt /tmp/repo-files.txt
 ```
 
 ```bash
-git diff refs/template-tags/v0.5.6 HEAD -- <file>
+git diff refs/template-tags/v0.5.7 HEAD -- <file>
 ```
 
 ## Adopter-owned files
@@ -95,12 +95,13 @@ copied from it.
 
 Neither target is wired into `lint` or `ci-pr` yet: there are no dependencies
 to scan, and syft is not in `scripts/install-ci-tools.sh`'s pinned tool list.
+| docs/template-drift.md | This inventory of deliberate differences from the template | #43 |
 
 ## Local rules that conflict with kit files
 
 | Rule | Where it is stated | Kit files affected | Why not patched locally |
 | --- | --- | --- | --- |
-| Every source file starts with `SPDX-License-Identifier: Apache-2.0` | AGENTS.md, "Repository policy" | scripts/issue-labeler.js, scripts/pr-lint.js, their `*.test.js` files, scripts/check-label-forms.sh, scripts/check-node-tests.sh carry no SPDX header | These files are unmodified copies of the template's automation scripts; patching them would break byte-identical sync |
+| Every source file starts with `SPDX-License-Identifier: Apache-2.0` | AGENTS.md, "Repository policy" | Kit scripts under `scripts/` (from template v0.5.7 they carry `SPDX-License-Identifier: MIT`) | Resolved upstream in v0.5.7: the kit scripts are MIT-licensed template scaffolding (see NOTICE), so an MIT identifier is the correct header and they stay byte-identical. The rule's wording names Apache-2.0 because it is written for this library's own source |
 
 ## Updating this file
 
