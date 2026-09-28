@@ -61,6 +61,18 @@ Contributions are provided under Apache-2.0 by default ([§5](LICENSE)). No CLA.
 
 Report vulnerabilities privately — see [`SECURITY.md`](SECURITY.md). Please do not open a public issue for a suspected vulnerability.
 
+## Third-party licences
+
+The Modbus RTU transport uses [libmodbus](https://libmodbus.org/), licensed LGPL-2.1-or-later and used here under the LGPL-2.1 terms. This library's own code stays Apache-2.0; the LGPL applies to libmodbus itself, not to code that links it dynamically.
+
+Conditions for this library and for anyone who ships it:
+
+- **Link dynamically.** libmodbus is loaded as a shared library (`libmodbus.so`). Do not link it statically and do not copy its source into this library or into an application (LGPL-2.1 §6(b)).
+- **Ship it as a replaceable file.** A product that bundles libmodbus ships it as its own shared library, so the recipient can replace it with a modified version.
+- **Pass on the licence and the source.** Include the libmodbus licence text and copyright notice, and provide its complete corresponding source code with the product or through a written offer. If libmodbus itself is modified, the modified source is provided under the same licence.
+
+Dependency licence policy, in short: permissive licences are used directly; weak copyleft is allowed under conditions (LGPL through dynamic linking only, MPL-2.0 for unmodified files with source available) and each such component is listed in [`scripts/licence-exceptions.json`](scripts/licence-exceptions.json); strong copyleft (GPL, AGPL, SSPL) is not linked.
+
 ## License
 
 [Apache-2.0](LICENSE). Copyright 2026 Tzu-Hsuan Hsu. Attribution requirements are in [`NOTICE`](NOTICE).
