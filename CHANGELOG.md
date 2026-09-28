@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.6](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.5...v0.2.6) (2026-09-28)
+
+
+### Bug Fixes
+
+* take the template's v0.5.7 pr-lint fixes and SPDX headers ([#45](https://github.com/TzuH-Hsu/phm-sensor-io/issues/45)) ([24be929](https://github.com/TzuH-Hsu/phm-sensor-io/commit/24be9291242fe75e46460ea5d67c6e534bd7ddc2))
+
 ## [0.2.5](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.4...v0.2.5) (2026-09-26)
 
 
