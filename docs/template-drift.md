@@ -86,6 +86,7 @@ copied from it.
 | CONTRIBUTING.md | Tool-install table reorders two rows and drops a trailing comma | Editorial only, no functional difference | 76cacb2 (#15) |
 | .github/workflows/ci.yml "Install CI tools" step | Runs a bare `make ci-tools` | The tool list lives in the Makefile (`CI_TOOLS`), so a tool this repository adds needs no YAML change | #52 |
 | Makefile `lint` and `ci-tools` | `lint-licenses` added to `lint`; `ci-tools` installs `CI_TOOLS` by default and sends `EXTRA_CI_TOOLS` (syft) to `scripts/install-extra-tools.sh` | The licence check runs in CI with a pinned syft while `scripts/install-ci-tools.sh` stays identical to the template | #52 |
+| CONTRIBUTING.md tool-install table | Adds a `syft` row | `make lint` now runs `lint-licenses`, which needs syft | #52 |
 
 ## Local additions in template directories
 
