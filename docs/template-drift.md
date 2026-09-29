@@ -1,9 +1,12 @@
 # Template drift
 
 This file lists every place this repository deliberately differs from the
-github-project-os template, measured against template v0.5.7 on 2026-09-28 (re-baselined from v0.5.6 when v0.5.7 was taken).
+github-project-os template, measured against template v0.6.0 on 2026-09-28 (re-baselined when v0.6.0 was taken).
 On a sync, keep everything below; update this file in the same PR as any new
 deliberate difference.
+
+The rule that keeps this file current lives in AGENTS.md (Build and validation):
+a PR that adds or removes a deliberate difference updates this file.
 
 The comparison ref is not a normal tag. Fetch it once into its own namespace, so
 template tags never collide with this repository's version tags:
@@ -11,19 +14,19 @@ template tags never collide with this repository's version tags:
 ```bash
 git remote add template https://github.com/TzuH-Hsu/github-project-os.git  # once
 git config remote.template.tagOpt --no-tags
-git fetch template '+refs/tags/v0.5.7:refs/template-tags/v0.5.7'
+git fetch template '+refs/tags/v0.6.0:refs/template-tags/v0.6.0'
 ```
 
 To re-check:
 
 ```bash
-git ls-tree -r --name-only refs/template-tags/v0.5.7 > /tmp/template-files.txt
+git ls-tree -r --name-only refs/template-tags/v0.6.0 > /tmp/template-files.txt
 git ls-tree -r --name-only HEAD > /tmp/repo-files.txt
 diff /tmp/template-files.txt /tmp/repo-files.txt
 ```
 
 ```bash
-git diff refs/template-tags/v0.5.7 HEAD -- <file>
+git diff refs/template-tags/v0.6.0 HEAD -- <file>
 ```
 
 ## Adopter-owned files
@@ -101,7 +104,7 @@ to scan, and syft is not in `scripts/install-ci-tools.sh`'s pinned tool list.
 
 | Rule | Where it is stated | Kit files affected | Why not patched locally |
 | --- | --- | --- | --- |
-| Every source file starts with an SPDX identifier | AGENTS.md, "Repository policy" | Kit scripts under `scripts/` | No longer a conflict: from template v0.5.7 the kit scripts carry `SPDX-License-Identifier: MIT`, and the rule says template scripts keep that identifier while this library's own code uses Apache-2.0. Row kept so a sync does not re-stamp them |
+| Every source file starts with an SPDX identifier | AGENTS.md, "Repository policy" | Kit scripts under `scripts/` | No longer a conflict: since template v0.5.7 the kit scripts carry `SPDX-License-Identifier: MIT`, and the rule says template scripts keep that identifier while this library's own code uses Apache-2.0. Row kept so a sync does not re-stamp them |
 
 ## Updating this file
 
