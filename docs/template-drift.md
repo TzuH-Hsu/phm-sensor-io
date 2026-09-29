@@ -99,9 +99,6 @@ copied from it.
 | Makefile: `sbom` target | Writes an SPDX SBOM and a readable third-party licence list to `dist/`, for the repository and each image in `SBOM_IMAGES` | 73653b8 (#41) |
 | scripts/tool-pins.extra | Pins for CI tools this repository adds (syft), read by `make check-tool-versions` | #52 |
 | scripts/install-extra-tools.sh | Installs the tools pinned in `scripts/tool-pins.extra`, checksum verified; called by `make ci-tools` | #52 |
-
-Neither target is wired into `lint` or `ci-pr` yet: there are no dependencies
-to scan, and syft is not in `scripts/install-ci-tools.sh`'s pinned tool list.
 | docs/template-drift.md | This inventory of deliberate differences from the template | #43 |
 
 ## Local rules that conflict with kit files
