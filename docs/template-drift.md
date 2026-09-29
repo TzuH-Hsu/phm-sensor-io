@@ -84,6 +84,9 @@ copied from it.
 | Makefile | `check` no longer calls `scripts/check-license-marker.sh` (removed) and instead runs `scripts/test_check_licenses.py` under `python3 -m unittest` when present | check-license-marker.sh was not taken (see above); the licence allowlist has its own test | 9d49270 (#39) |
 | .gitignore | Adds `dist/` (SBOM output) | `make sbom` writes SPDX + licence-list files there | bootstrap |
 | CONTRIBUTING.md | Tool-install table reorders two rows and drops a trailing comma | Editorial only, no functional difference | 76cacb2 (#15) |
+| .github/workflows/ci.yml "Install CI tools" step | Runs a bare `make ci-tools` | The tool list lives in the Makefile (`CI_TOOLS`), so a tool this repository adds needs no YAML change | #52 |
+| Makefile `lint` and `ci-tools` | `lint-licenses` added to `lint`; `ci-tools` installs `CI_TOOLS` by default and sends `EXTRA_CI_TOOLS` (syft) to `scripts/install-extra-tools.sh` | The licence check runs in CI with a pinned syft while `scripts/install-ci-tools.sh` stays identical to the template | #52 |
+| CONTRIBUTING.md tool-install table | Adds a `syft` row | `make lint` now runs `lint-licenses`, which needs syft | #52 |
 
 ## Local additions in template directories
 
@@ -95,9 +98,8 @@ copied from it.
 | scripts/test_check_licenses.py | Unit tests for check-licenses.py, run by `make check` | 9d49270 (#39) |
 | Makefile: `lint-licenses` target | Runs syft + check-licenses.py against the repository and each image in `SBOM_IMAGES` | fcd885a (#23) |
 | Makefile: `sbom` target | Writes an SPDX SBOM and a readable third-party licence list to `dist/`, for the repository and each image in `SBOM_IMAGES` | 73653b8 (#41) |
-
-Neither target is wired into `lint` or `ci-pr` yet: there are no dependencies
-to scan, and syft is not in `scripts/install-ci-tools.sh`'s pinned tool list.
+| scripts/tool-pins.extra | Pins for CI tools this repository adds (syft), read by `make check-tool-versions` | #52 |
+| scripts/install-extra-tools.sh | Installs the tools pinned in `scripts/tool-pins.extra`, checksum verified; called by `make ci-tools` | #52 |
 | docs/template-drift.md | This inventory of deliberate differences from the template | #43 |
 
 ## Local rules that conflict with kit files
