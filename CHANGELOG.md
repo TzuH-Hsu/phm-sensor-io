@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.7](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.6...v0.2.7) (2026-09-29)
+
+
+### Bug Fixes
+
+* take the template's v0.6.0 pr-lint and AGENTS.md changes ([#50](https://github.com/TzuH-Hsu/phm-sensor-io/issues/50)) ([ab6a3e5](https://github.com/TzuH-Hsu/phm-sensor-io/commit/ab6a3e5100b89321787023c4a99f5340ef13a818))
+
 ## [0.2.6](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.5...v0.2.6) (2026-09-28)
 
 
