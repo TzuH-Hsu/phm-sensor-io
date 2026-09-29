@@ -63,13 +63,15 @@ Report vulnerabilities privately — see [`SECURITY.md`](SECURITY.md). Please do
 
 ## Third-party licences
 
-The Modbus RTU transport uses [libmodbus](https://libmodbus.org/), licensed LGPL-2.1-or-later and used here under the LGPL-2.1 terms. This library's own code stays Apache-2.0; the LGPL applies to libmodbus itself, not to code that links it dynamically.
+The Modbus RTU transport uses [libmodbus](https://libmodbus.org/), licensed LGPL-2.1-or-later. This library uses it under **LGPL-3.0** (the "or later" option). This library's own code stays Apache-2.0; the LGPL applies to libmodbus itself, not to code that links it dynamically.
 
-Conditions for this library and for anyone who ships it:
+Anyone who ships this library in a product must meet the LGPL-3.0 §4 conditions for libmodbus. The licence texts are authoritative; in short:
 
-- **Link dynamically.** libmodbus is loaded as a shared library (`libmodbus.so`). Do not link it statically and do not copy its source into this library or into an application (LGPL-2.1 §6(b)).
-- **Ship it as a replaceable file.** A product that bundles libmodbus ships it as its own shared library, so the recipient can replace it with a modified version.
-- **Pass on the licence and the source.** Include the libmodbus licence text and copyright notice, and provide its complete corresponding source code with the product or through a written offer. If libmodbus itself is modified, the modified source is provided under the same licence.
+- **Link dynamically.** libmodbus is loaded as a shared library (`libmodbus.so`) and ships as its own file, so the recipient can replace it with a modified version (§4(d)(1)). Do not link it statically and do not copy its source into this library or into an application.
+- **Give notice.** Each copy of the product states prominently that it uses libmodbus and that libmodbus is covered by the LGPL, and includes the LGPL-3.0 and GPL-3.0 texts and the libmodbus copyright notices.
+- **Provide the source.** Supply the complete corresponding source of the libmodbus version shipped. If libmodbus itself is modified, the modified source is provided under the same licence.
+- **Allow modification and debugging.** The product's licence terms must not restrict the recipient from modifying the libmodbus portion, or from reverse engineering to debug such modifications.
+- **Installation information** (§4(e), GPL-3.0 §6) is required only when the product is a User Product as defined there.
 
 Dependency licence policy, in short: permissive licences are used directly; weak copyleft is allowed under conditions (LGPL through dynamic linking only, MPL-2.0 for unmodified files with source available) and each such component is listed in [`scripts/licence-exceptions.json`](scripts/licence-exceptions.json); strong copyleft (GPL, AGPL, SSPL) is not linked.
 

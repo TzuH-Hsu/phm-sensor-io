@@ -12,7 +12,7 @@
         "LGPL-2.1",
         "LGPL-2.1+"
       ],
-      "reason": "LGPL-2.1-or-later, used under LGPL-2.1 terms: dynamic linking only, shipped as a separate shared library, never statically linked or copied into this library. See README, Third-party licences."
+      "reason": "LGPL-2.1-or-later, used under LGPL-3.0 terms: dynamic linking only, shipped as a separate replaceable shared library, never statically linked or copied into this library. See README, Third-party licences."
     }
   ],
   "dev_only": []
