@@ -68,7 +68,7 @@ The Modbus RTU transport uses [libmodbus](https://libmodbus.org/), licensed LGPL
 Anyone who ships this library in a product must meet the LGPL-3.0 §4 conditions for libmodbus. The licence texts are authoritative; in short:
 
 - **Link dynamically.** libmodbus is loaded as a shared library (`libmodbus.so`) and ships as its own file, so the recipient can replace it with a modified version (§4(d)(1)). Do not link it statically and do not copy its source into this library or into an application.
-- **Give notice.** Each copy of the product states prominently that it uses libmodbus and that libmodbus is covered by the LGPL, and includes the LGPL-3.0 and GPL-3.0 texts and the libmodbus copyright notices.
+- **Give notice.** Each copy of the product states prominently that it uses libmodbus and that libmodbus is covered by the LGPL, and includes the LGPL-3.0 and GPL-3.0 texts and the libmodbus copyright notices. If the product displays copyright notices while it runs, the libmodbus copyright notice is displayed among them, with a reference to the licence texts (§4(c)).
 - **Provide the source.** Supply the complete corresponding source of the libmodbus version shipped. If libmodbus itself is modified, the modified source is provided under the same licence.
 - **Allow modification and debugging.** The product's licence terms must not restrict the recipient from modifying the libmodbus portion, or from reverse engineering to debug such modifications.
 - **Installation information** (§4(e), GPL-3.0 §6) is required only when the product is a User Product as defined there.
