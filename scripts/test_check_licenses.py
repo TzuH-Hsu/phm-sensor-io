@@ -60,6 +60,9 @@ class ExceptionTest(RepoCase):
     def test_named_component_with_listed_licence_passes(self):
         self.assertEqual(self.bad(art("libmodbus", "LGPL-2.1-or-later", kind="conan")), set())
 
+    def test_lgpl_2_1_only_is_not_covered_by_the_or_later_entry(self):
+        self.assertTrue(self.bad(art("libmodbus", "LGPL-2.1-only", kind="conan")))
+
     def test_same_name_in_another_ecosystem_gets_no_exception(self):
         self.assertTrue(self.bad(art("libmodbus", "LGPL-2.1-or-later", kind="npm")))
 
