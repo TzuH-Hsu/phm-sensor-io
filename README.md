@@ -43,19 +43,19 @@ From a fresh clone to a passing build, passing tests and a local run. Every make
 
 ### 1. Install the tools
 
-| Tool | Version | Set in | Needed for |
+| Tool | Version | Where the version is set | Needed for |
 | --- | --- | --- | --- |
-| C++ compiler | C++20; CI uses GCC 13.3 | `CMakeLists.txt` (standard); the CI runner image (compiler) | `make build` |
-| CMake | 3.28 or later; CI uses 4.4.4 | `CMakeLists.txt` (minimum); `scripts/tool-pins.extra` (CI) | `make build` |
-| Ninja | CI uses 1.13.2 | `scripts/tool-pins.extra` | `make build` |
-| GoogleTest | 1.17.0, downloaded by the first configure | `cmake/Dependencies.cmake` | `make test` |
-| clang-format, clang-tidy | CI uses the runner image's; `clang-format-22` and `clang-tidy-22` are preferred when present | the CI runner image; `Makefile` (`CLANG_FORMAT`, `CLANG_TIDY`) | `make lint` |
-| markdownlint-cli2, yamllint, actionlint, gitleaks, lychee | 0.23.3, 1.38.0, 1.7.12, 8.30.1, 0.24.2 | `scripts/install-ci-tools.sh` | `make lint` |
-| syft | 1.54.1 | `scripts/tool-pins.extra` | `make lint` |
-| Node.js | 22 or later; CI uses the current LTS | `.github/workflows/ci.yml` (`node-version`) | `make lint` |
-| Python 3 | CI uses the runner image's | the CI runner image | `make lint` |
+| C++ compiler (GCC or Clang) | C++20; CI uses the runner image's GCC | `CMakeLists.txt` | `make build` |
+| CMake | 3.28 or later; CI installs a pinned release | `CMakeLists.txt` (minimum); `scripts/tool-pins.extra` (CI) | `make build` |
+| Ninja | CI installs a pinned release | `scripts/tool-pins.extra` | `make build` |
+| GoogleTest | Pinned; the first configure downloads it | `cmake/Dependencies.cmake` | `make test` |
+| clang-format, clang-tidy | CI uses the runner image's; `clang-format-22` and `clang-tidy-22` are preferred when present | The CI runner image; `Makefile` (`CLANG_FORMAT`, `CLANG_TIDY`) | `make lint` |
+| markdownlint-cli2, yamllint, actionlint, gitleaks, lychee | Pinned | `scripts/install-ci-tools.sh` | `make lint` |
+| syft | Pinned | `scripts/tool-pins.extra` | `make lint` |
+| Node.js | 22 or later (markdownlint-cli2 needs it); CI uses the current LTS | `.github/workflows/ci.yml` (`node-version`) | `make lint` |
+| Python 3 | CI uses the runner image's | The CI runner image | `make lint` |
 
-Where a version here and its file differ, the file is right. On Ubuntu 24.04, the image CI runs on, this installs the compiler, the build tools, the C++ lint tools and what step 3 needs:
+Step 3 installs the pinned versions. On Ubuntu 24.04, the image CI runs on, this installs the compiler, the build tools, the C++ lint tools and what step 3 needs:
 
 ```bash
 sudo apt-get install -y g++ make git cmake ninja-build clang-format clang-tidy python3 pipx curl unzip
@@ -74,10 +74,10 @@ The repository has no submodules.
 ### 3. Set up the environment once
 
 ```bash
-ALLOW_LOCAL_INSTALL=1 make ci-tools && make setup
+ALLOW_LOCAL_INSTALL=1 make ci-tools && pipx ensurepath && export PATH="$HOME/.local/bin:$PATH" && make setup
 ```
 
-On Linux x86_64, `make ci-tools` installs the lint tools, CMake and Ninja at the pinned versions (binaries into `/usr/local/bin`, using sudo when that is not writable; markdownlint-cli2 with `npm install -g`; yamllint with pipx into `~/.local/bin`, which must be on `PATH`), and `make setup` then prints `missing: <tool>` for every tool still not on `PATH` and configures the `dev` build in `build/dev`, downloading GoogleTest; it installs nothing itself. On another platform, install the tools with the commands in [CONTRIBUTING.md](CONTRIBUTING.md#getting-started) and run only `make setup`.
+On Linux x86_64, `make ci-tools` installs the lint tools, CMake and Ninja at the pinned versions (binaries into `/usr/local/bin`, using sudo when that is not writable; markdownlint-cli2 with `npm install -g`; yamllint with pipx into `~/.local/bin`, which `pipx ensurepath` puts on `PATH` for new shells and the `export` for this one), and `make setup` then prints `missing: <tool>` for every tool still not on `PATH` and configures the `dev` build in `build/dev`, downloading GoogleTest; it installs nothing itself. On another platform, install the tools with the commands in [CONTRIBUTING.md](CONTRIBUTING.md#getting-started) and run only `make setup`.
 
 ### 4. Build
 
@@ -116,7 +116,7 @@ Runs every lint and both test builds, the same targets CI runs (`make ci-pr` is 
 
 - **`make setup` prints `missing: <tool>` and fails.** That tool is not on `PATH`; install it as in steps 1 and 3. Building and testing need only the compiler, CMake and Ninja, so steps 4 to 6 work before every lint tool is installed.
 - **`make ci-tools` fails with `linux x86_64` in the message.** Its release binaries exist for Linux x86_64 only; on macOS or arm64, install each tool with the command in [CONTRIBUTING.md](CONTRIBUTING.md#getting-started).
-- **`make setup` reports `missing: yamllint` right after `make ci-tools`.** pipx installed it into `~/.local/bin`, which is not on `PATH` yet; run `pipx ensurepath`, open a new shell and run `make setup` again.
+- **The first configure fails while downloading GoogleTest.** Each new build tree downloads it from github.com and checks its SHA-256; run it with network access, after `make clean` if a half-configured `build/` is left behind.
 
 More in [docs/development.md](docs/development.md#troubleshooting).
 
