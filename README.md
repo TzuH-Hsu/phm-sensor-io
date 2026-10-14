@@ -44,6 +44,8 @@ make help     # all targets
 make verify   # lint + tests — the gate before every PR
 ```
 
+Building and testing: [docs/development.md](docs/development.md).
+
 There is no published package yet. Watch [releases](https://github.com/TzuH-Hsu/phm-sensor-io/releases) or the open issues for the first `v0.1.0`.
 
 ## Contributing

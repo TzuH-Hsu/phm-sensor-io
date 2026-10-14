@@ -94,6 +94,10 @@ copied from it.
 | .github/workflows/ci.yml "Install CI tools" step | Runs a bare `make ci-tools` | The tool list lives in the Makefile (`CI_TOOLS`), so a tool this repository adds needs no YAML change | #52 |
 | Makefile `lint` and `ci-tools` | `lint-licenses` added to `lint`; `ci-tools` installs `CI_TOOLS` by default and sends `EXTRA_CI_TOOLS` (syft) to `scripts/install-extra-tools.sh` | The licence check runs in CI with a pinned syft while `scripts/install-ci-tools.sh` stays identical to the template | #52 |
 | CONTRIBUTING.md tool-install table | Adds a `syft` row | `make lint` now runs `lint-licenses`, which needs syft | #52 |
+| Makefile | `lint` gains `lint-cpp`; `test` runs ctest on the `dev` and `asan-ubsan` builds instead of the template's placeholder; new `setup`, `configure`, `build`, `test-unit`, `test-sanitize`, `test-one`, `clean` targets; markdownlint skips `build/`; `lint-licenses` and `sbom` exclude `./build/**`; `CI_TOOLS` and `EXTRA_CI_TOOLS` add cmake and ninja | C++ build and tests wired into `make` and CI (the Makefile is the only executable contract) | #68 |
+| .gitignore, .yamllint.yml | Ignore `build/` (and `CMakeUserPresets.json` in .gitignore) | CMake build trees are not delivered content | #68 |
+| .github/workflows/ci.yml (header comment) | Says the job lints, builds and runs the unit tests in a few minutes instead of "~15s" | The job now builds and tests C++ | #68 |
+| CONTRIBUTING.md (Getting started) | Tool table adds cmake, ninja and LLVM rows; adds `make setup` and a pointer to docs/development.md | The C++ build needs them | #68 |
 
 ## Local additions in template directories
 
@@ -105,8 +109,12 @@ copied from it.
 | scripts/test_check_licenses.py | Unit tests for check-licenses.py, run by `make check` | 9d49270 (#39) |
 | Makefile: `lint-licenses` target | Runs syft + check-licenses.py against the repository and each image in `SBOM_IMAGES` | fcd885a (#23) |
 | Makefile: `sbom` target | Writes an SPDX SBOM and a readable third-party licence list to `dist/`, for the repository and each image in `SBOM_IMAGES` | 73653b8 (#41) |
-| scripts/tool-pins.extra | Pins for CI tools this repository adds (syft), read by `make check-tool-versions` | #52 |
-| scripts/install-extra-tools.sh | Installs the tools pinned in `scripts/tool-pins.extra`, checksum verified; called by `make ci-tools` | #52 |
+| scripts/tool-pins.extra | Pins for CI tools this repository adds (syft, cmake, ninja), read by `make check-tool-versions` | #52, #68 |
+| scripts/install-extra-tools.sh | Installs the tools pinned in `scripts/tool-pins.extra`, checksum verified; called by `make ci-tools` | #52, #68 |
+| CMakeLists.txt, CMakePresets.json, cmake/ | CMake project for the `phm_sensor_io` library (`dev`, `asan-ubsan` presets; GoogleTest pinned in cmake/Dependencies.cmake) | #68 |
+| .clang-format, .clang-tidy | C++ formatting and static-analysis configuration for `make lint-cpp` | #68 |
+| include/, src/, tests/ | Library public headers, sources and unit tests | #68 |
+| docs/development.md | Common commands, tools and source layout for building and testing | #68 |
 | docs/template-drift.md | This inventory of deliberate differences from the template | #43 |
 
 ## Local rules that conflict with kit files

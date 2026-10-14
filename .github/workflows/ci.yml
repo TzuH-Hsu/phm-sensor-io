@@ -14,10 +14,10 @@ name: CI
 # satisfies the required check, letting unverified code merge past the gate.
 # Neither mechanism belongs on this job.
 #
-# There is no minutes argument for either. The job runs in ~15s: on a public
-# repository hosted runners are free, and on a private one it bills a single
-# rounded-up minute whether it does work or not (docs/setup/runners.md).
-# Skipping saves at most that minute and risks everything.
+# There is no minutes argument for either. The job lints, builds and runs the
+# unit tests in a few minutes: on a public repository hosted runners are free,
+# and on a private one skipping saves minutes that are small next to letting an
+# unbuilt change merge (docs/setup/runners.md).
 
 on:
   pull_request:

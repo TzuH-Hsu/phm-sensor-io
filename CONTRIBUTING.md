@@ -15,7 +15,7 @@ git clone <your-repo-url>
 cd <your-repo>
 ```
 
-Install the lint tools used by `make lint-docs`:
+Install the tools used by `make verify`:
 
 | Tool | Install |
 | --- | --- |
@@ -26,13 +26,20 @@ Install the lint tools used by `make lint-docs`:
 | actionlint | `brew install actionlint` |
 | gitleaks | `brew install gitleaks` |
 | syft | `brew install syft` — `make lint-licenses` (part of `make lint`) and `make sbom` |
+| cmake | `brew install cmake` — configures the C++ build (`make build`, `make test`) |
+| ninja | `brew install ninja` — the CMake generator |
+| clang-format, clang-tidy | `brew install llvm`, then put `"$(brew --prefix llvm)/bin"` on `PATH` — `make lint-cpp` (part of `make lint`) |
 
 Then:
 
 ```bash
 make help    # list all targets
+make setup   # configure the build and list missing tools
 make verify  # L0 (lint) + L1 (test) — run this before every PR
 ```
+
+The everyday commands are listed in
+[docs/development.md](docs/development.md#common-commands).
 
 See `AGENTS.md` for the full validation ladder (L0–L4+) and how to declare a
 skipped level.
