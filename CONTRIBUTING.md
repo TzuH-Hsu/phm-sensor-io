@@ -22,7 +22,7 @@ Install the tools used by `make verify`:
 | markdownlint-cli2 | `npm install -g markdownlint-cli2` |
 | yamllint | `brew install yamllint` (or `pip install yamllint`) |
 | lychee | `brew install lychee` |
-| node (any LTS) | `brew install node` — runs `scripts/*.test.js` in `make check` |
+| node (22 or later) | `brew install node` — runs `scripts/*.test.js` in `make check`; markdownlint-cli2 needs 22 or later |
 | actionlint | `brew install actionlint` |
 | gitleaks | `brew install gitleaks` |
 | syft | `brew install syft` — `make lint-licenses` (part of `make lint`) and `make sbom` |

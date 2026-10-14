@@ -39,12 +39,86 @@ Three ideas carry the whole library:
 
 ## Getting started
 
+From a fresh clone to a passing build, passing tests and a local run. Every make target, where each tool version is pinned, and more troubleshooting are in [docs/development.md](docs/development.md).
+
+### 1. Install the tools
+
+| Tool | Version | Set in | Needed for |
+| --- | --- | --- | --- |
+| C++ compiler | C++20; CI uses GCC 13.3 | `CMakeLists.txt` (standard); the CI runner image (compiler) | `make build` |
+| CMake | 3.28 or later; CI uses 4.4.4 | `CMakeLists.txt` (minimum); `scripts/tool-pins.extra` (CI) | `make build` |
+| Ninja | CI uses 1.13.2 | `scripts/tool-pins.extra` | `make build` |
+| GoogleTest | 1.17.0, downloaded by the first configure | `cmake/Dependencies.cmake` | `make test` |
+| clang-format, clang-tidy | CI uses the runner image's; `clang-format-22` and `clang-tidy-22` are preferred when present | the CI runner image; `Makefile` (`CLANG_FORMAT`, `CLANG_TIDY`) | `make lint` |
+| markdownlint-cli2, yamllint, actionlint, gitleaks, lychee | 0.23.3, 1.38.0, 1.7.12, 8.30.1, 0.24.2 | `scripts/install-ci-tools.sh` | `make lint` |
+| syft | 1.54.1 | `scripts/tool-pins.extra` | `make lint` |
+| Node.js | 22 or later; CI uses the current LTS | `.github/workflows/ci.yml` (`node-version`) | `make lint` |
+| Python 3 | CI uses the runner image's | the CI runner image | `make lint` |
+
+Where a version here and its file differ, the file is right. On Ubuntu 24.04, the image CI runs on, this installs the compiler, the build tools, the C++ lint tools and what step 3 needs:
+
 ```bash
-make help     # all targets
-make verify   # lint + tests — the gate before every PR
+sudo apt-get install -y g++ make git cmake ninja-build clang-format clang-tidy python3 pipx curl unzip
 ```
 
-Building and testing: [docs/development.md](docs/development.md).
+Then install Node.js 22 or later from [nodejs.org](https://nodejs.org/) or with a Node version manager.
+
+### 2. Get the source
+
+```bash
+git clone https://github.com/TzuH-Hsu/phm-sensor-io.git && cd phm-sensor-io
+```
+
+The repository has no submodules.
+
+### 3. Set up the environment once
+
+```bash
+ALLOW_LOCAL_INSTALL=1 make ci-tools && make setup
+```
+
+On Linux x86_64, `make ci-tools` installs the lint tools, CMake and Ninja at the pinned versions (binaries into `/usr/local/bin`, using sudo when that is not writable; markdownlint-cli2 with `npm install -g`; yamllint with pipx into `~/.local/bin`), and `make setup` then reports every tool still missing from `PATH` and configures the `dev` build in `build/dev`, downloading GoogleTest; on another platform, install the tools with the commands in [CONTRIBUTING.md](CONTRIBUTING.md#getting-started) and run only `make setup`.
+
+### 4. Build
+
+```bash
+make build
+```
+
+Builds the library and the unit tests in `build/dev`.
+
+### 5. Run the tests
+
+```bash
+make test                     # every test, on the plain and on the sanitized build
+make test-one TEST=Skeleton   # only the tests whose <Suite>.<Test> name matches
+```
+
+`make test` runs ctest on `build/dev` and on `build/asan-ubsan` (AddressSanitizer and UndefinedBehaviorSanitizer) and ends each run with `100% tests passed out of 1`; `make test-one` runs only the matching tests on `build/dev`.
+
+### 6. Run it locally
+
+```bash
+build/dev/tests/skeleton_test
+```
+
+The library has no bus code yet, so the one program that runs is this test executable: it prints the GoogleTest report for `Skeleton.PublicHeadersCompile`, ends with `[  PASSED  ] 1 test.` and exits 0. Reading registers from a simulated Modbus RTU slave over a pseudo-terminal arrives with #1.
+
+### 7. Before opening a pull request
+
+```bash
+make verify
+```
+
+Runs every lint and both test builds, the same targets CI runs (`make ci-pr` is an alias); it makes network calls (the licence lookups of `make lint-licenses`, and the GoogleTest download of a new build tree).
+
+### 8. Common problems
+
+- **`make setup` prints `missing: <tool>` and fails.** That tool is not on `PATH`; install it as in steps 1 and 3. Building and testing need only the compiler, CMake and Ninja, so steps 4 to 6 work before every lint tool is installed.
+- **`make ci-tools` fails with `linux x86_64` in the message.** Its release binaries exist for Linux x86_64 only; on macOS or arm64, install each tool with the command in [CONTRIBUTING.md](CONTRIBUTING.md#getting-started).
+- **`yamllint` is still missing after `make ci-tools`.** pipx installs it into `~/.local/bin`; put that directory on `PATH` (`pipx ensurepath` does it for new shells).
+
+More in [docs/development.md](docs/development.md#troubleshooting).
 
 There is no published package yet. Watch [releases](https://github.com/TzuH-Hsu/phm-sensor-io/releases) or the open issues for the first `v0.1.0`.
 
