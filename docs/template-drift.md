@@ -99,6 +99,8 @@ copied from it.
 | .gitignore, .yamllint.yml | Ignore `build/` (and `CMakeUserPresets.json` in .gitignore) | CMake build trees are not delivered content | #68 |
 | .github/workflows/ci.yml (header comment) | Says the job lints, builds and runs the unit tests in a few minutes instead of "~15s" | The job now builds and tests C++ | #68 |
 | CONTRIBUTING.md (Getting started) | Tool table adds cmake, ninja and LLVM rows; adds `make setup` and a pointer to docs/development.md | The C++ build needs them | #68 |
+| CONTRIBUTING.md tool-install table (node row) | Says node 22 or later instead of any LTS | The pinned markdownlint-cli2 0.23.3 requires Node.js 22 or later | #72 |
+| Makefile `ci-tools` help text | Says the target installs Linux x86_64 binaries and runs locally with `ALLOW_LOCAL_INSTALL=1`, instead of "CI only" | The README's Getting started uses it to install the pinned tools on a Linux x86_64 development machine | #72 |
 
 ## Local additions in template directories
 
@@ -115,7 +117,7 @@ copied from it.
 | CMakeLists.txt, CMakePresets.json, cmake/ | CMake project for the `phm_sensor_io` library (`dev`, `asan-ubsan` presets; GoogleTest pinned in cmake/Dependencies.cmake) | #68 |
 | .clang-format, .clang-tidy | C++ formatting and static-analysis configuration for `make lint-cpp` | #68 |
 | include/, src/, tests/ | Library public headers, sources and unit tests | #68 |
-| docs/development.md | Common commands, tools and source layout for building and testing | #68 |
+| docs/development.md | Common commands, tools, where each tool version is set, source layout and troubleshooting for building and testing | #68, #72 |
 | docs/template-drift.md | This inventory of deliberate differences from the template | #43 |
 
 ## Local rules that conflict with kit files

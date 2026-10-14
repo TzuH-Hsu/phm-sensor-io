@@ -77,7 +77,7 @@ The repository has no submodules.
 ALLOW_LOCAL_INSTALL=1 make ci-tools && make setup
 ```
 
-On Linux x86_64, `make ci-tools` installs the lint tools, CMake and Ninja at the pinned versions (binaries into `/usr/local/bin`, using sudo when that is not writable; markdownlint-cli2 with `npm install -g`; yamllint with pipx into `~/.local/bin`), and `make setup` then reports every tool still missing from `PATH` and configures the `dev` build in `build/dev`, downloading GoogleTest; on another platform, install the tools with the commands in [CONTRIBUTING.md](CONTRIBUTING.md#getting-started) and run only `make setup`.
+On Linux x86_64, `make ci-tools` installs the lint tools, CMake and Ninja at the pinned versions (binaries into `/usr/local/bin`, using sudo when that is not writable; markdownlint-cli2 with `npm install -g`; yamllint with pipx into `~/.local/bin`, which must be on `PATH`), and `make setup` then prints `missing: <tool>` for every tool still not on `PATH` and configures the `dev` build in `build/dev`, downloading GoogleTest; it installs nothing itself. On another platform, install the tools with the commands in [CONTRIBUTING.md](CONTRIBUTING.md#getting-started) and run only `make setup`.
 
 ### 4. Build
 
@@ -94,7 +94,7 @@ make test                     # every test, on the plain and on the sanitized bu
 make test-one TEST=Skeleton   # only the tests whose <Suite>.<Test> name matches
 ```
 
-`make test` runs ctest on `build/dev` and on `build/asan-ubsan` (AddressSanitizer and UndefinedBehaviorSanitizer) and ends each run with `100% tests passed out of 1`; `make test-one` runs only the matching tests on `build/dev`.
+`make test` builds and runs the tests on `build/dev` and on `build/asan-ubsan` (AddressSanitizer and UndefinedBehaviorSanitizer), and ctest reports `100% tests passed` for each; `make test-one` runs only the matching tests on `build/dev`.
 
 ### 6. Run it locally
 
@@ -116,7 +116,7 @@ Runs every lint and both test builds, the same targets CI runs (`make ci-pr` is 
 
 - **`make setup` prints `missing: <tool>` and fails.** That tool is not on `PATH`; install it as in steps 1 and 3. Building and testing need only the compiler, CMake and Ninja, so steps 4 to 6 work before every lint tool is installed.
 - **`make ci-tools` fails with `linux x86_64` in the message.** Its release binaries exist for Linux x86_64 only; on macOS or arm64, install each tool with the command in [CONTRIBUTING.md](CONTRIBUTING.md#getting-started).
-- **`yamllint` is still missing after `make ci-tools`.** pipx installs it into `~/.local/bin`; put that directory on `PATH` (`pipx ensurepath` does it for new shells).
+- **`make setup` reports `missing: yamllint` right after `make ci-tools`.** pipx installed it into `~/.local/bin`, which is not on `PATH` yet; run `pipx ensurepath`, open a new shell and run `make setup` again.
 
 More in [docs/development.md](docs/development.md#troubleshooting).
 
