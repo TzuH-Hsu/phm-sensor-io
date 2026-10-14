@@ -2,9 +2,10 @@
 #
 # phm_sensor_io_set_warnings(<target>)
 #
-# Applies the project warning set to a target. INTERFACE libraries get the
-# flags as INTERFACE options, so they reach every translation unit that
-# includes their headers.
+# Applies the project warning set to a target's own sources. The flags are
+# PRIVATE, so they never reach a project that links the library. An INTERFACE
+# library has no sources of its own: its headers get the warnings through the
+# tests that include them.
 function(phm_sensor_io_set_warnings target)
   set(warnings
     -Wall
@@ -24,10 +25,5 @@ function(phm_sensor_io_set_warnings target)
     list(APPEND warnings -Werror)
   endif()
 
-  get_target_property(type ${target} TYPE)
-  if(type STREQUAL "INTERFACE_LIBRARY")
-    target_compile_options(${target} INTERFACE ${warnings})
-  else()
-    target_compile_options(${target} PRIVATE ${warnings})
-  endif()
+  target_compile_options(${target} PRIVATE ${warnings})
 endfunction()
