@@ -45,6 +45,7 @@ copied from it.
 | .github/CODEOWNERS | Repository-specific comment set (no active owner lines) |
 | .github/labels.yml — area:\* set | `area:driver`, `area:docs`, `area:ci` instead of the template's starter domains |
 | .github/ISSUE_TEMPLATE/\*.yml — Area options | Match this repo's area:\* set above |
+| .github/ISSUE_TEMPLATE/feature_request.yml — Interface and Examples fields | Optional `Interface` and `Examples and test data` textareas between `Proposed solution` and `Acceptance criteria`, with writing hints; added in #70 |
 | .github/PROJECT_FIELDS.md — Area row | Points at this repo's own `.github/labels.yml` domains |
 | docs/adr/README.md — index | Lists only the ADRs this repository has (0001–0003, 0007, 0008) |
 | docs/adr/ADR-0008 — Date/Issue | Ported issue number, not the upstream one |

@@ -29,6 +29,60 @@ body:
       required: false
 
   - type: textarea
+    id: interface
+    attributes:
+      label: Interface
+      description: >-
+        Enough for a developer to open files and start. Kinds (library class,
+        set of functions, executable, CLI command, CI job ...); location
+        (repository path, namespace, main header and source); public interface
+        as a C++ header draft (classes, public signatures, types); error
+        reporting (Result/error code or exception, and when); construction and
+        configuration (dependencies through the constructor or a factory, no
+        global state, paths and addresses passed in by the caller, nothing
+        hard-coded); lifecycle and threads (create/start/stop order, which calls
+        may run concurrently and what the library serializes); callers, and
+        the interfaces of other issues it uses (issue number and exact name).
+      placeholder: |
+        Kinds: library class `...`
+        Location: `include/phm/sensor_io/....hpp`, `src/....cpp`, namespace `phm::sensor_io`
+
+        ```cpp
+        class Example {
+         public:
+          [[nodiscard]] Result<Value, Error> run(std::string_view name);
+        };
+        ```
+
+        Errors: ...
+        Construction and configuration: ...
+        Lifecycle and threads: ...
+        Callers and other issues: ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples and test data
+      description: >-
+        Example inputs and expected outputs inline (hex frames, JSON, a
+        result). Fixture files to add under tests/fixtures/<name>: short ones
+        inline, long ones with how to generate them; the acceptance criteria
+        name the fixture each test uses. At least one normal, one boundary and
+        one error case, each as "input → expected result". All values invented:
+        no real device, address, register map or data sample.
+      placeholder: |
+        Normal: <input> → <expected result>
+        Boundary: <input> → <expected result>
+        Error: <input> → <expected result>
+
+        Fixture `tests/fixtures/<name>/<file>`:
+        ...
+    validations:
+      required: false
+
+  - type: textarea
     id: acceptance
     attributes:
       label: Acceptance criteria
