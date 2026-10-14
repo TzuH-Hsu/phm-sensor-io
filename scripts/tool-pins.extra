@@ -1,3 +1,8 @@
 # Tools this repository adds on top of the template kit: `<tool> <version> <source>`.
 # Read by scripts/check-tool-versions.sh (drift) and scripts/install-extra-tools.sh (CI install).
+# Ninja publishes no checksum file, so its row ends with a comment
+# `# sha256 <digest of ninja-linux.zip>`; update the digest with the version.
+# scripts/check-tool-versions.sh ignores the comment; the installer verifies it.
 syft 1.54.1 github:anchore/syft
+cmake 4.4.4 github:Kitware/CMake
+ninja 1.13.2 github:ninja-build/ninja # sha256 5749cbc4e668273514150a80e387a957f933c6ed3f5f11e03fb30955e2bbead6
