@@ -13,16 +13,19 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(PHM_SENSOR_IO_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 option(PHM_SENSOR_IO_SANITIZE "Build with AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+# The tests build only when this is the top-level project, so an application
+# that adds the library with add_subdirectory() or FetchContent gets neither
+# the tests nor their GoogleTest download.
+option(PHM_SENSOR_IO_BUILD_TESTS "Build the unit tests" ${PROJECT_IS_TOP_LEVEL})
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 include(CompilerWarnings)
 include(Sanitizers)
 
-include(CTest)
-
 add_subdirectory(src)
 
-if(BUILD_TESTING)
+if(PHM_SENSOR_IO_BUILD_TESTS)
+  enable_testing()
   include(Dependencies)
   add_subdirectory(tests)
 endif()

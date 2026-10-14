@@ -68,13 +68,18 @@ LLVM_HINT = install: brew install llvm, then put "$$(brew --prefix llvm)/bin" on
 # CONTRIBUTING.md says how to install each one.
 DEV_TOOLS := cmake ninja markdownlint-cli2 yamllint lychee node actionlint gitleaks syft python3
 
-setup: configure ## Configure the dev build and report every development tool missing from PATH
+# The audit runs before configuring, so one run lists every missing tool even
+# when cmake or ninja is among them.
+setup: ## Report every development tool missing from PATH and configure the dev build
 	@missing=0; \
 	for tool in $(DEV_TOOLS); do \
 		command -v "$$tool" >/dev/null 2>&1 || { echo "missing: $$tool (see CONTRIBUTING.md)"; missing=1; }; \
 	done; \
 	test -n "$(CLANG_FORMAT)" || { echo 'missing: clang-format ($(LLVM_HINT))'; missing=1; }; \
 	test -n "$(CLANG_TIDY)" || { echo 'missing: clang-tidy ($(LLVM_HINT))'; missing=1; }; \
+	if command -v cmake >/dev/null 2>&1 && command -v ninja >/dev/null 2>&1; then \
+		$(MAKE) --no-print-directory configure || exit 1; \
+	fi; \
 	if [ "$$missing" -ne 0 ]; then exit 1; fi; \
 	echo "setup: every development tool found; build/dev is configured"
 
