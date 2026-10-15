@@ -14,7 +14,7 @@
 # Customize tool invocations HERE, not in .github/workflows/*.
 
 SHELL := /usr/bin/env bash
-.PHONY: help setup lint-licenses sbom lint-docs lint-docs-external lint-actions lint-secrets lint-cpp check lint configure build test-unit test-sanitize test test-one clean verify ci-pr ci-tools check-tool-versions maintenance
+.PHONY: help setup lint-licenses sbom lint-docs lint-docs-external lint-actions lint-secrets lint-cpp check lint configure build test-unit test-sanitize test test-one clean test-install verify ci-pr ci-tools check-tool-versions maintenance
 
 .DEFAULT_GOAL := help
 
@@ -113,6 +113,43 @@ test-one: ## Run the unit tests matching TEST=<regex> on the host build
 
 clean: ## Remove the build trees (build/) and nothing else
 	rm -rf build
+
+# test-install installs build/dev into a prefix under build/ and builds
+# tests/consumer, a separate CMake project, against it the way a downstream
+# project does, then runs the consumer program. The consumer searches only
+# CMAKE_PREFIX_PATH (PHM_SENSOR_IO_CONSUMER_PREFIX_PATH_ONLY), so a copy
+# installed elsewhere on the machine can neither make the check pass nor hide
+# a failure. It then checks the two configure failures a consumer meets: no
+# CMAKE_PREFIX_PATH, and a request for another major version. Not part of
+# `test`: CI runs it as a step of its own.
+INSTALL_TEST_DIR := build/install-test
+INSTALL_TEST_PREFIX := $(CURDIR)/$(INSTALL_TEST_DIR)/prefix
+CONSUMER_CONFIGURE := cmake -S tests/consumer -G Ninja -DPHM_SENSOR_IO_CONSUMER_PREFIX_PATH_ONLY=ON
+PROJECT_VERSION_MAJOR = $(shell sed -n 's/^project.phm_sensor_io VERSION \([0-9][0-9]*\)\..*/\1/p' CMakeLists.txt)
+
+test-install: build ## Install build/dev into a prefix under build/ and build tests/consumer against it
+	@test -n "$(PROJECT_VERSION_MAJOR)" || { echo 'test-install: no project(phm_sensor_io VERSION ...) in CMakeLists.txt'; exit 1; }
+	rm -rf $(INSTALL_TEST_DIR)
+	cmake --install build/dev --prefix $(INSTALL_TEST_PREFIX)
+	$(CONSUMER_CONFIGURE) -B $(INSTALL_TEST_DIR)/consumer \
+		-DCMAKE_PREFIX_PATH=$(INSTALL_TEST_PREFIX) -DPHM_SENSOR_IO_CONSUMER_VERSION=$(PROJECT_VERSION_MAJOR)
+	cmake --build $(INSTALL_TEST_DIR)/consumer
+	$(INSTALL_TEST_DIR)/consumer/consumer
+	@echo "test-install: expect find_package() to fail without CMAKE_PREFIX_PATH"
+	@if $(CONSUMER_CONFIGURE) -B $(INSTALL_TEST_DIR)/no-prefix \
+		> $(INSTALL_TEST_DIR)/no-prefix.log 2>&1; then \
+		cat $(INSTALL_TEST_DIR)/no-prefix.log; echo "test-install: find_package() succeeded without CMAKE_PREFIX_PATH"; exit 1; fi
+	@grep -F 'Could not find a package configuration file provided by "phm_sensor_io"' $(INSTALL_TEST_DIR)/no-prefix.log \
+		|| { cat $(INSTALL_TEST_DIR)/no-prefix.log; exit 1; }
+	@other_major=$$(( $(PROJECT_VERSION_MAJOR) + 1 )); \
+	echo "test-install: expect find_package() to refuse major version $$other_major"; \
+	if $(CONSUMER_CONFIGURE) -B $(INSTALL_TEST_DIR)/other-major \
+		-DCMAKE_PREFIX_PATH=$(INSTALL_TEST_PREFIX) -DPHM_SENSOR_IO_CONSUMER_VERSION=$$other_major \
+		> $(INSTALL_TEST_DIR)/other-major.log 2>&1; then \
+		cat $(INSTALL_TEST_DIR)/other-major.log; echo "test-install: find_package() accepted major version $$other_major"; exit 1; fi; \
+	grep -F "compatible with requested version \"$$other_major\"" $(INSTALL_TEST_DIR)/other-major.log \
+		|| { cat $(INSTALL_TEST_DIR)/other-major.log; exit 1; }
+	@echo "test-install: the installed package works and both failures are reported"
 
 lint-cpp: configure ## Check C++ formatting (clang-format) and static analysis (clang-tidy)
 	@test -n "$(CLANG_FORMAT)" || { echo '$(LLVM_HINT)'; exit 1; }

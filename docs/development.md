@@ -12,10 +12,21 @@ of `make verify`).
 | `make build` | Builds the library and the unit tests in `build/dev` |
 | `make test` | Runs the unit tests on the plain build and on the AddressSanitizer + UndefinedBehaviorSanitizer build (`build/asan-ubsan`) |
 | `make test-one TEST=<regex>` | Runs only the unit tests whose `<Suite>.<Test>` name matches the regular expression (`ctest -R`) on the `dev` build |
+| `make test-install` | Installs `build/dev` into a prefix under `build/`, builds the consumer project `tests/consumer` against it with `find_package()` and runs it, and checks that `find_package()` fails without `CMAKE_PREFIX_PATH` and for another major version; CI runs it after `make verify` |
 | `make verify` | Runs every lint and every test; the check to pass before opening a pull request |
 | `make clean` | Removes `build/` and nothing else |
 
 `make help` lists every target.
+
+## Using the library from another project
+
+`cmake --install build/dev --prefix <dir>` installs the public headers and a
+CMake package into `<dir>`; another CMake project then calls
+`find_package(phm_sensor_io CONFIG REQUIRED)` with `<dir>` on
+`CMAKE_PREFIX_PATH` and links `phm_sensor_io::phm_sensor_io`, as
+[`tests/consumer/`](../tests/consumer/CMakeLists.txt) does. The package version
+follows the release, and `find_package()` accepts it only for a request with
+the same major version.
 
 ## Tools
 
@@ -54,7 +65,8 @@ npm and pip installs.
 | `include/phm/sensor_io/` | Public headers, included as `"phm/sensor_io/<name>.hpp"` |
 | `src/` | Library sources and private headers; CMake target `phm_sensor_io`, alias `phm_sensor_io::phm_sensor_io` |
 | `tests/unit/` | GoogleTest unit tests, one executable per test file |
-| `cmake/` | Warning flags, sanitizer flags and the pinned test dependencies |
+| `tests/consumer/` | A separate CMake project that builds against the installed package (`make test-install`) |
+| `cmake/` | Warning flags, sanitizer flags, the pinned test dependencies and the template of the installed package configuration file |
 | `CMakePresets.json` | Build presets `dev` and `asan-ubsan`, each building into `build/<preset>` |
 
 The C++ namespace is `phm::sensor_io`. CMake options start with

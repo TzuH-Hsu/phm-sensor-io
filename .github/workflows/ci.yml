@@ -108,3 +108,10 @@ jobs:
 
       - name: Run CI
         run: make ci-pr
+
+      # Installs the library from build/dev into a prefix under build/ and
+      # builds tests/consumer, a separate CMake project, against it with
+      # find_package(). A step of its own so that `make ci-pr` stays an alias
+      # of `make verify` (lint + test).
+      - name: Test the installed package
+        run: make test-install
