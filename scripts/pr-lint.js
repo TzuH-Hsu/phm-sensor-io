@@ -84,8 +84,7 @@ function isExempt({ author, labels }) {
 // The lines of a PR body that may carry `Refs` or `No issue:`: fenced code
 // blocks (``` or ~~~) skipped, HTML comments and raw <pre> blocks removed
 // outside them. All are read in source order: inside a fence `<!--` and
-// `<pre>` are code, so they can neither hide nor fake a closing fence; the
-// same holds inside an inline code span that closes on the same line. Pure;
+// `<pre>` are code, so they can neither hide nor fake a closing fence. Pure;
 // the rules are the file header's.
 function bodyLines(body) {
   const out = [];
@@ -108,22 +107,11 @@ function bodyLines(body) {
         rest = rest.slice(end).replace(hidden, '');
         hidden = null;
       } else {
-        const start = rest.search(/<!--|<pre\b|`/i);
+        const start = rest.search(/<!--|<pre\b/i);
         if (start < 0) { line += rest; break; }
         line += rest.slice(0, start);
-        rest = rest.slice(start);
-        if (rest[0] === '`') {
-          // Inline code on this line is code: a `<!--` or `<pre>` in it opens
-          // nothing. An unclosed backtick run is literal text.
-          const run = rest.match(/^`+/)[0];
-          const close = rest.slice(run.length).search(new RegExp(`(?<!\`)${run}(?!\`)`));
-          const len = close < 0 ? run.length : run.length + close + run.length;
-          line += rest.slice(0, len);
-          rest = rest.slice(len);
-          continue;
-        }
-        hidden = rest.startsWith('<!--') ? /-->/ : /<\/pre>/i;
-        rest = rest.slice(4); // past `<!--` or `<pre`
+        hidden = rest.startsWith('<!--', start) ? /-->/ : /<\/pre>/i;
+        rest = rest.slice(start + 4); // past `<!--` or `<pre`
       }
     }
     const m = line.match(/^ {0,3}(`{3,}|~{3,})/);

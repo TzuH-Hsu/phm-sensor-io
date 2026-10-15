@@ -162,10 +162,6 @@ test('only line-start keywords outside code and comments count', () => {
   assert.deepEqual(parseBody('```\n```still-code\nRefs #12\n```').refs, []); // a marker with text after it does not close
   assert.deepEqual(parseBody('````\n```\nRefs #12\n````').refs, []); // a shorter marker does not close a longer fence
   assert.deepEqual(parseBody('Refs #12\r\nNo issue: x').noIssue, ['x']); // CRLF
-  // `<!--` or `<pre>` inside inline code is code: it hides nothing after it
-  assert.deepEqual(parseBody('Discuss `<!--` syntax\nRefs #12').refs, [{ repo: null, number: 12 }]);
-  assert.deepEqual(parseBody('Discuss ``a `<pre>` b`` here\nNo issue: tidy').noIssue, ['tidy']);
-  assert.deepEqual(parseBody('A lone ` then <!-- hidden\nRefs #12').refs, []); // an unclosed backtick is literal
 });
 
 test('a Refs line with something other than issues is reported, not ignored', () => {
