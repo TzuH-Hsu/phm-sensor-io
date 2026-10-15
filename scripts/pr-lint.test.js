@@ -162,6 +162,10 @@ test('only line-start keywords outside code and comments count', () => {
   assert.deepEqual(parseBody('```\n```still-code\nRefs #12\n```').refs, []); // a marker with text after it does not close
   assert.deepEqual(parseBody('````\n```\nRefs #12\n````').refs, []); // a shorter marker does not close a longer fence
   assert.deepEqual(parseBody('Refs #12\r\nNo issue: x').noIssue, ['x']); // CRLF
+  // `<!--` or `<pre>` inside inline code is code: it hides nothing after it
+  assert.deepEqual(parseBody('Discuss `<!--` syntax\nRefs #12').refs, [{ repo: null, number: 12 }]);
+  assert.deepEqual(parseBody('Discuss ``a `<pre>` b`` here\nNo issue: tidy').noIssue, ['tidy']);
+  assert.deepEqual(parseBody('A lone ` then <!-- hidden\nRefs #12').refs, []); // an unclosed backtick is literal
 });
 
 test('a Refs line with something other than issues is reported, not ignored', () => {
@@ -282,6 +286,28 @@ test('run: reads Refs and No issue from the live body, not the event (a re-run r
   const c = coreSpy();
   await run({ github: both.github, context: ctx(), core: c.core, sleep: noWait });
   assert.deepEqual(c.out, [['info', 'PR lint passed: closes #42; refs #3']]);
+});
+
+test('run: more than 20 local Refs fail without a single lookup', async () => {
+  const body = `Refs ${Array.from({ length: 21 }, (_, i) => `#${i + 1}`).join(' ')}\nRefs o/edge#9`;
+  // Count the issueOrPullRequest lookups around the stub.
+  const counted = (stub) => {
+    let lookups = 0;
+    const inner = stub.github.graphql;
+    stub.github.graphql = async (query, vars) => { if (query.includes('issueOrPullRequest')) lookups++; return inner(query, vars); };
+    return { github: stub.github, lookups: () => lookups };
+  };
+  const over = counted(graphqlStub([[]], undefined, body));
+  const { out, core } = coreSpy();
+  await run({ github: over.github, context: ctx({ head: { ref: 'docs/x' } }), core, sleep: noWait });
+  assert.equal(out[0][0], 'failed');
+  assert.match(out[0][1], /Refs lists 21 issues of this repository — at most 20/);
+  assert.equal(over.lookups(), 0);
+  const twenty = counted(graphqlStub([[]], undefined, `Refs ${Array.from({ length: 20 }, (_, i) => `#${i + 1}`).join(' ')}`));
+  const ok = coreSpy();
+  await run({ github: twenty.github, context: ctx({ head: { ref: 'docs/x' } }), core: ok.core, sleep: noWait });
+  assert.equal(ok.out[0][0], 'info');
+  assert.equal(twenty.lookups(), 20);
 });
 
 test('run: asks GitHub what each local Refs number is, and fails on a pull request or a missing number', async () => {

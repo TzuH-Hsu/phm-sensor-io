@@ -84,7 +84,8 @@ function isExempt({ author, labels }) {
 // The lines of a PR body that may carry `Refs` or `No issue:`: fenced code
 // blocks (``` or ~~~) skipped, HTML comments and raw <pre> blocks removed
 // outside them. All are read in source order: inside a fence `<!--` and
-// `<pre>` are code, so they can neither hide nor fake a closing fence. Pure;
+// `<pre>` are code, so they can neither hide nor fake a closing fence; the
+// same holds inside an inline code span that closes on the same line. Pure;
 // the rules are the file header's.
 function bodyLines(body) {
   const out = [];
@@ -107,11 +108,22 @@ function bodyLines(body) {
         rest = rest.slice(end).replace(hidden, '');
         hidden = null;
       } else {
-        const start = rest.search(/<!--|<pre\b/i);
+        const start = rest.search(/<!--|<pre\b|`/i);
         if (start < 0) { line += rest; break; }
         line += rest.slice(0, start);
-        hidden = rest.startsWith('<!--', start) ? /-->/ : /<\/pre>/i;
-        rest = rest.slice(start + 4); // past `<!--` or `<pre`
+        rest = rest.slice(start);
+        if (rest[0] === '`') {
+          // Inline code on this line is code: a `<!--` or `<pre>` in it opens
+          // nothing. An unclosed backtick run is literal text.
+          const run = rest.match(/^`+/)[0];
+          const close = rest.slice(run.length).search(new RegExp(`(?<!\`)${run}(?!\`)`));
+          const len = close < 0 ? run.length : run.length + close + run.length;
+          line += rest.slice(0, len);
+          rest = rest.slice(len);
+          continue;
+        }
+        hidden = rest.startsWith('<!--') ? /-->/ : /<\/pre>/i;
+        rest = rest.slice(4); // past `<!--` or `<pre`
       }
     }
     const m = line.match(/^ {0,3}(`{3,}|~{3,})/);
@@ -197,7 +209,12 @@ function lint({ headRef, refs, body, repo, author, labels, refKinds }) {
     );
   }
   const linksIssue = linked.length > 0 || cross.length > 0 || parsed.refs.length > 0;
-  for (const n of localRefs) {
+  if (localRefs.size > MAX_LOCAL_REFS) {
+    problems.push(
+      `Refs lists ${localRefs.size} issues of this repository — at most ${MAX_LOCAL_REFS}; refer to a parent issue instead of every sub-issue`,
+    );
+  }
+  for (const n of localRefs.size > MAX_LOCAL_REFS ? [] : localRefs) {
     const kind = refKinds ? refKinds[n] : 'Issue';
     if (kind === 'PullRequest') {
       problems.push(`Refs #${n} is a pull request, not an issue — refer to the issue it works on, or write "No issue: <reason>"`);
@@ -258,6 +275,11 @@ function passLine(result) {
   if (parts.length === 0) parts.push(`no issue (${result.noIssue})`);
   return `PR lint passed: ${parts.join('; ')}`;
 }
+
+// Each local `Refs` number costs one GraphQL call; a body listing more than
+// this is refused before any call, so a generated list cannot drain the
+// token's hourly GraphQL budget that other workflows share.
+const MAX_LOCAL_REFS = 20;
 
 const REF_KIND_QUERY = `query($owner: String!, $repo: String!, $number: Int!) {
   repository(owner: $owner, name: $repo) {
@@ -371,7 +393,8 @@ async function run({ github, context, core, sleep, pauseMs, now = Date.now }) {
   const here = repo.toLowerCase();
   const localNumbers = [...new Set(parseBody(body).refs
     .filter((r) => r.repo === null || r.repo.toLowerCase() === here).map((r) => r.number))];
-  const refKinds = await refKindsRead(github, context.repo.owner, context.repo.repo, localNumbers);
+  // Over the cap, lint() reports it and nothing is looked up.
+  const refKinds = localNumbers.length > MAX_LOCAL_REFS ? {} : await refKindsRead(github, context.repo.owner, context.repo.repo, localNumbers);
   const result = lint({ headRef: pr.head && pr.head.ref, refs, body, repo, author, labels, refKinds });
   if (result.problems.length > 0) {
     core.setFailed(`PR lint failed:\n- ${result.problems.join('\n- ')}`);
@@ -381,4 +404,4 @@ async function run({ github, context, core, sleep, pauseMs, now = Date.now }) {
   return result;
 }
 
-module.exports = { run, lint, parseBody, bodyLines, isPlaceholderReason, passLine, closingRead, refKindsRead, closingRefs, settledRefs, isExempt, describe, TYPES, BRANCH_RE, EXEMPT_AUTHORS, EXEMPT_LABELS, CLOSING_QUERY, REF_KIND_QUERY };
+module.exports = { run, lint, parseBody, bodyLines, isPlaceholderReason, passLine, closingRead, refKindsRead, closingRefs, settledRefs, isExempt, describe, TYPES, BRANCH_RE, EXEMPT_AUTHORS, EXEMPT_LABELS, CLOSING_QUERY, REF_KIND_QUERY, MAX_LOCAL_REFS };
