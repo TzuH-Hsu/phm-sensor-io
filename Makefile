@@ -133,7 +133,7 @@ CI_TOOLS := markdownlint-cli2 yamllint actionlint gitleaks lychee syft cmake nin
 EXTRA_CI_TOOLS := syft cmake ninja
 TOOLS ?= $(CI_TOOLS)
 
-ci-tools: ## Install pinned CI tools (CI only) - default CI_TOOLS, or TOOLS="lychee"
+ci-tools: ## Install pinned CI tools (Linux x86_64; locally with ALLOW_LOCAL_INSTALL=1) - default CI_TOOLS, or TOOLS="lychee"
 	@set -e; kit="$(filter-out $(EXTRA_CI_TOOLS),$(TOOLS))"; extra="$(filter $(EXTRA_CI_TOOLS),$(TOOLS))"; \
 	if [ -n "$$kit" ]; then scripts/install-ci-tools.sh $$kit; fi; \
 	if [ -n "$$extra" ]; then scripts/install-extra-tools.sh $$extra; fi
