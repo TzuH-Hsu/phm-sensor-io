@@ -101,6 +101,9 @@ copied from it.
 | CONTRIBUTING.md (Getting started) | Tool table adds cmake, ninja and LLVM rows; adds `make setup` and a pointer to docs/development.md | The C++ build needs them | #68 |
 | CONTRIBUTING.md tool-install table (node row) | Says node 22 or later instead of any LTS | The pinned markdownlint-cli2 0.23.3 requires Node.js 22 or later | #72 |
 | Makefile `ci-tools` help text | Says the target installs Linux x86_64 binaries and runs locally with `ALLOW_LOCAL_INSTALL=1`, instead of "CI only" | The README's Getting started uses it to install the pinned tools on a Linux x86_64 development machine | #72 |
+| Makefile | New `test-install` target: installs `build/dev` into `build/install-test/prefix`, builds and runs `tests/consumer` against it with `find_package()`, and checks that `find_package()` fails without `CMAKE_PREFIX_PATH` and for another major version; not part of `test` or `verify` | Checks the installed CMake package the way a downstream project uses it | #74 |
+| .github/workflows/ci.yml | A `Test the installed package` step after `Run CI` runs `make test-install` | CI checks the installed package while `make ci-pr` stays an alias of `make verify` | #74 |
+| release-please-config.json | `extra-files: ["CMakeLists.txt"]`, so a release updates the `project(phm_sensor_io VERSION ...)` line marked `x-release-please-version` | The installed package reports that version to `find_package()` | #74 |
 
 ## Local additions in template directories
 
@@ -114,9 +117,9 @@ copied from it.
 | Makefile: `sbom` target | Writes an SPDX SBOM and a readable third-party licence list to `dist/`, for the repository and each image in `SBOM_IMAGES` | 73653b8 (#41) |
 | scripts/tool-pins.extra | Pins for CI tools this repository adds (syft, cmake, ninja), read by `make check-tool-versions` | #52, #68 |
 | scripts/install-extra-tools.sh | Installs the tools pinned in `scripts/tool-pins.extra`, checksum verified; called by `make ci-tools` | #52, #68 |
-| CMakeLists.txt, CMakePresets.json, cmake/ | CMake project for the `phm_sensor_io` library (`dev`, `asan-ubsan` presets; GoogleTest pinned in cmake/Dependencies.cmake) | #68 |
+| CMakeLists.txt, CMakePresets.json, cmake/ | CMake project for the `phm_sensor_io` library (`dev`, `asan-ubsan` presets; GoogleTest pinned in cmake/Dependencies.cmake; install rules and the package configuration template cmake/phm_sensor_ioConfig.cmake.in) | #68, #74 |
 | .clang-format, .clang-tidy | C++ formatting and static-analysis configuration for `make lint-cpp` | #68 |
-| include/, src/, tests/ | Library public headers, sources and unit tests | #68 |
+| include/, src/, tests/ | Library public headers, sources and unit tests; tests/consumer/ is a separate CMake project built against the installed package | #68, #74 |
 | docs/development.md | Common commands, tools, where each tool version is set, source layout and troubleshooting for building and testing | #68, #72 |
 | docs/template-drift.md | This inventory of deliberate differences from the template | #43 |
 

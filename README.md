@@ -104,6 +104,8 @@ build/dev/tests/skeleton_test
 
 The library has no bus code yet, so the one program that runs is this test executable: it prints the GoogleTest report for `Skeleton.PublicHeadersCompile`, ends with `[  PASSED  ] 1 test.` and exits 0. Reading registers from a simulated Modbus RTU slave over a pseudo-terminal arrives with #1.
 
+To use the library from another CMake project, install it with `cmake --install build/dev --prefix <dir>` and call `find_package(phm_sensor_io CONFIG REQUIRED)` there with `<dir>` on `CMAKE_PREFIX_PATH`; `make test-install` does this with [`tests/consumer/`](tests/consumer/CMakeLists.txt).
+
 ### 7. Before opening a pull request
 
 ```bash

@@ -1,7 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 cmake_minimum_required(VERSION 3.28...4.4)
 
-project(phm_sensor_io LANGUAGES CXX)
+# The version is the release version; release-please updates the line below
+# (release-please-config.json, extra-files). The installed package reports it
+# to find_package().
+project(phm_sensor_io VERSION 0.2.7 LANGUAGES CXX) # x-release-please-version
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -19,6 +22,7 @@ option(PHM_SENSOR_IO_SANITIZE "Build with AddressSanitizer and UndefinedBehavior
 option(PHM_SENSOR_IO_BUILD_TESTS "Build the unit tests" ${PROJECT_IS_TOP_LEVEL})
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+include(GNUInstallDirs)
 include(CompilerWarnings)
 include(Sanitizers)
 
