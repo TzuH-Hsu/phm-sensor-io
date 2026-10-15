@@ -39,9 +39,14 @@ configure_package_config_file(
   INSTALL_DESTINATION "${PHM_SENSOR_IO_CMAKE_DIR}")
 # SameMajorVersion: a consumer asking for 0.x accepts any installed 0.y; one
 # asking for another major version is refused at find_package().
+# ARCH_INDEPENDENT while the library is header-only: nothing installed depends
+# on the pointer size, so a 32-bit consumer may use a package installed from a
+# 64-bit build. Remove it when the first source file makes the library a
+# compiled one.
 write_basic_package_version_file(
   "${PROJECT_BINARY_DIR}/phm_sensor_ioConfigVersion.cmake"
-  COMPATIBILITY SameMajorVersion)
+  COMPATIBILITY SameMajorVersion
+  ARCH_INDEPENDENT)
 install(FILES
   "${PROJECT_BINARY_DIR}/phm_sensor_ioConfig.cmake"
   "${PROJECT_BINARY_DIR}/phm_sensor_ioConfigVersion.cmake"
