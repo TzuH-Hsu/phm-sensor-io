@@ -28,6 +28,7 @@ Install the tools used by `make verify`:
 | syft | `brew install syft` — `make lint-licenses` (part of `make lint`) and `make sbom` |
 | cmake | `brew install cmake` — configures the C++ build (`make build`, `make test`) |
 | ninja | `brew install ninja` — the CMake generator |
+| libmodbus, pkg-config | `brew install libmodbus pkg-config` (Ubuntu: `sudo apt-get install libmodbus-dev pkg-config`) — the Modbus RTU transport links the shared libmodbus, found with pkg-config |
 | clang-format, clang-tidy | `brew install llvm`, then put `"$(brew --prefix llvm)/bin"` on `PATH` — `make lint-cpp` (part of `make lint`) |
 
 Then:

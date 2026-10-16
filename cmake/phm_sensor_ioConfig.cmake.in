@@ -9,11 +9,22 @@
 
 # Third-party dependencies of the exported target are found here, before the
 # targets file is read, so that a consumer's find_package() fails with the name
-# of the missing dependency. The library has none yet. When the third-party
-# Modbus library is added, find it here, for example:
-#
-#   include(CMakeFindDependencyMacro)
-#   find_dependency(<package>)
+# of the missing dependency. A static build of the library needs libmodbus at
+# the consumer's link step, through the same imported target the build used
+# (PkgConfig::PHM_SENSOR_IO_LIBMODBUS); it is linked as libmodbus.so.
+# nlohmann/json is header-only and used only inside the library, so a consumer
+# does not need it.
+include(CMakeFindDependencyMacro)
+find_dependency(PkgConfig)
+if(NOT TARGET PkgConfig::PHM_SENSOR_IO_LIBMODBUS)
+  pkg_check_modules(PHM_SENSOR_IO_LIBMODBUS QUIET IMPORTED_TARGET libmodbus)
+  if(NOT PHM_SENSOR_IO_LIBMODBUS_FOUND)
+    set(phm_sensor_io_FOUND FALSE)
+    set(phm_sensor_io_NOT_FOUND_MESSAGE
+      "phm_sensor_io needs libmodbus, which pkg-config cannot find (pkg-config --exists libmodbus)")
+    return()
+  endif()
+endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/phm_sensor_ioTargets.cmake")
 

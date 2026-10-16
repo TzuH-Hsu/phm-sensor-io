@@ -1,0 +1,13 @@
+{
+  "crc_reference":         "01 03 00 00 00 0A C5 CD",
+  "request_input_16_2":    "0A 04 00 10 00 02 71 75",
+  "reply_input_16_2":      "0A 04 04 00 FA FF 38 21 57",
+  "request_holding_16_2":  "0A 03 00 10 00 02 C4 B5",
+  "reply_holding_16_2":    "0A 03 04 00 FA FF 38 20 E0",
+  "reply_bad_crc":         "0A 04 04 00 FA FF 38 21 56",
+  "reply_other_slave":     "0B 04 04 00 FA FF 38 31 97",
+  "reply_bad_byte_count":  "0A 04 03 00 FA FF F3 D5",
+  "reply_exception_02":    "0A 84 02 B3 03",
+  "request_input_65535_1": "0A 04 FF FF 00 01 30 95",
+  "request_input_0_125":   "0A 04 00 00 00 7D 31 50"
+}

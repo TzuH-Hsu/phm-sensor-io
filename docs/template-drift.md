@@ -105,6 +105,8 @@ copied from it.
 | .github/workflows/ci.yml | A `Test the installed package` step after `Run CI` runs `make test-install` | CI checks the installed package while `make ci-pr` stays an alias of `make verify` | #74 |
 | release-please-config.json | `extra-files: ["CMakeLists.txt"]`, so a release updates the `project(phm_sensor_io VERSION ...)` line marked `x-release-please-version` | The installed package reports that version to `find_package()` | #74 |
 | scripts/pr-lint.js, scripts/pr-lint.test.js | A PR states its issue relation with `Closes #N`, `Refs #N` or `No issue: <reason>` instead of having to close exactly one issue; the branch may be `<type>/<slug>` without an issue number; `Refs` and `No issue:` are read from line starts outside code, raw `<pre>` blocks and HTML comments, in source order; a `Refs` of this repository must name an existing issue, not a pull request, and at most 20 are looked up | Small fixes and work that advances an issue without finishing it no longer need a throwaway issue or sub-issue just to satisfy the lint | #76 |
+| Makefile | `setup` also reports a missing pkg-config or libmodbus; `ci-tools` with its default tool list also runs the new `ci-system-packages` target, which installs `libmodbus-dev` and `pkg-config` with apt-get (in CI or with `ALLOW_LOCAL_INSTALL=1`); the `test-one` usage example names `TEST=SensorBus` | The library links the shared libmodbus, which CI installs from the distribution through the Makefile, not the workflow | #1 |
+| CONTRIBUTING.md tool-install table | Adds a libmodbus and pkg-config row | The C++ build needs them | #1 |
 | .github/PULL_REQUEST_TEMPLATE.md | Related issue section offers the three forms behind a `<!-- related-issue -->` placeholder, and the checklist line matches | Same rule as pr-lint | #76 |
 | AGENTS.md (operating rules 1 and 2, Workflow 2 and 4), CONTRIBUTING.md (Branches & commits, Pull requests), skills/pr-authoring/SKILL.md (rule 5, How, Pitfalls), skills/branch-and-commit/SKILL.md (rule 1, How) | Describe the two branch forms and the three issue relations | Same rule as pr-lint | #76 |
 
@@ -120,10 +122,10 @@ copied from it.
 | Makefile: `sbom` target | Writes an SPDX SBOM and a readable third-party licence list to `dist/`, for the repository and each image in `SBOM_IMAGES` | 73653b8 (#41) |
 | scripts/tool-pins.extra | Pins for CI tools this repository adds (syft, cmake, ninja), read by `make check-tool-versions` | #52, #68 |
 | scripts/install-extra-tools.sh | Installs the tools pinned in `scripts/tool-pins.extra`, checksum verified; called by `make ci-tools` | #52, #68 |
-| CMakeLists.txt, CMakePresets.json, cmake/ | CMake project for the `phm_sensor_io` library (`dev`, `asan-ubsan` presets; GoogleTest pinned in cmake/Dependencies.cmake; install rules and the package configuration template cmake/phm_sensor_ioConfig.cmake.in) | #68, #74 |
+| CMakeLists.txt, CMakePresets.json, cmake/ | CMake project for the `phm_sensor_io` library (`dev`, `asan-ubsan` presets; libmodbus found with pkg-config, nlohmann/json and GoogleTest pinned in cmake/Dependencies.cmake; install rules and the package configuration template cmake/phm_sensor_ioConfig.cmake.in) | #68, #74, #1 |
 | .clang-format, .clang-tidy | C++ formatting and static-analysis configuration for `make lint-cpp` | #68 |
-| include/, src/, tests/ | Library public headers, sources and unit tests; tests/consumer/ is a separate CMake project built against the installed package | #68, #74 |
-| docs/development.md | Common commands, tools, where each tool version is set, source layout and troubleshooting for building and testing | #68, #72 |
+| include/, src/, tests/ | Library public headers, sources and unit tests; tests/support/ holds the simulated Modbus RTU slave, tests/fixtures/ the test data; tests/consumer/ is a separate CMake project built against the installed package | #68, #74, #1 |
+| docs/development.md | Common commands, tools, where each tool version is set, source layout and troubleshooting for building and testing | #68, #72, #1 |
 | docs/template-drift.md | This inventory of deliberate differences from the template | #43 |
 
 ## Local rules that conflict with kit files

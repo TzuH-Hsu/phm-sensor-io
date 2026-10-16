@@ -20,16 +20,18 @@ option(PHM_SENSOR_IO_SANITIZE "Build with AddressSanitizer and UndefinedBehavior
 # that adds the library with add_subdirectory() or FetchContent gets neither
 # the tests nor their GoogleTest download.
 option(PHM_SENSOR_IO_BUILD_TESTS "Build the unit tests" ${PROJECT_IS_TOP_LEVEL})
+# The library is static or shared as BUILD_SHARED_LIBS selects.
+option(BUILD_SHARED_LIBS "Build the library as a shared library" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 include(GNUInstallDirs)
 include(CompilerWarnings)
 include(Sanitizers)
+include(Dependencies)
 
 add_subdirectory(src)
 
 if(PHM_SENSOR_IO_BUILD_TESTS)
   enable_testing()
-  include(Dependencies)
   add_subdirectory(tests)
 endif()
