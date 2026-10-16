@@ -107,6 +107,8 @@ copied from it.
 | scripts/pr-lint.js, scripts/pr-lint.test.js | A PR states its issue relation with `Closes #N`, `Refs #N` or `No issue: <reason>` instead of having to close exactly one issue; the branch may be `<type>/<slug>` without an issue number; `Refs` and `No issue:` are read from line starts outside code, raw `<pre>` blocks and HTML comments, in source order; a `Refs` of this repository must name an existing issue, not a pull request, and at most 20 are looked up | Small fixes and work that advances an issue without finishing it no longer need a throwaway issue or sub-issue just to satisfy the lint | #76 |
 | .github/PULL_REQUEST_TEMPLATE.md | Related issue section offers the three forms behind a `<!-- related-issue -->` placeholder, and the checklist line matches | Same rule as pr-lint | #76 |
 | AGENTS.md (operating rules 1 and 2, Workflow 2 and 4), CONTRIBUTING.md (Branches & commits, Pull requests), skills/pr-authoring/SKILL.md (rule 5, How, Pitfalls), skills/branch-and-commit/SKILL.md (rule 1, How) | Describe the two branch forms and the three issue relations | Same rule as pr-lint | #76 |
+| .github/workflows/ci.yml `Lint the pull request` step | The comment above the step names both branch forms and the three issue relations | Same rule as pr-lint; comment only, the step is unchanged | #79 |
+| docs/adr/ADR-0008-event-workflow-logic-in-scripts.md (status line) | Marked partially superseded (2026-10-16) by the PR-lint relation rule and its token use; the body is unchanged | The PR lint's checks changed after the ADR was accepted | #79 |
 
 ## Local additions in template directories
 
