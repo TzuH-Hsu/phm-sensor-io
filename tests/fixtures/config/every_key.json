@@ -1,0 +1,22 @@
+{
+  "bus": "modbus_rtu",
+  "ports": [
+    { "name": "line-a", "device": "/dev/ttyTEST0", "baud": 9600, "parity": "none", "stop_bits": 2,
+      "response_timeout_ms": 200, "retries": 2 }
+  ],
+  "points": [
+    { "name": "point-1", "port": "line-a", "slave_address": 10, "function": "read_input_registers",
+      "values": [
+        { "name": "value_a", "register": 16, "type": "uint16", "scale": 0.5, "offset": 0.0,
+          "unit": "unit_a", "min": 0.0, "max": 1000.0 },
+        { "name": "value_b", "register": 17, "type": "int16", "scale": 0.25, "offset": 1.5,
+          "unit": "unit_b", "min": -40.0, "max": null }
+      ] },
+    { "name": "point-2", "port": "line-a", "slave_address": 247, "function": "read_holding_registers",
+      "values": [
+        { "name": "counter", "register": 100, "type": "uint32", "word_order": "low_first" },
+        { "name": "level", "register": 102, "type": "float32", "word_order": "high_first" },
+        { "name": "delta", "register": 104, "type": "int32" }
+      ] }
+  ]
+}

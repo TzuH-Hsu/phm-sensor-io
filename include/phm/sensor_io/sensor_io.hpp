@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
-// Umbrella header of the phm_sensor_io library. The public interface is added
-// under include/phm/sensor_io/ and included from here.
+// Umbrella header of the phm_sensor_io library: includes every public header.
+// No public header includes a libmodbus header or names a libmodbus type.
 #pragma once
 
-namespace phm::sensor_io {}  // namespace phm::sensor_io
+#include "phm/sensor_io/config.hpp"      // IWYU pragma: export
+#include "phm/sensor_io/quality.hpp"     // IWYU pragma: export
+#include "phm/sensor_io/reading.hpp"     // IWYU pragma: export
+#include "phm/sensor_io/result.hpp"      // IWYU pragma: export
+#include "phm/sensor_io/sensor_bus.hpp"  // IWYU pragma: export
