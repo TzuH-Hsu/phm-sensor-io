@@ -18,6 +18,7 @@
 
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -58,11 +59,22 @@ class SimulatedSlave {
   // Sets the byte count field to `byte_count` and sends that many data bytes.
   void reply_with_byte_count(std::uint8_t byte_count, std::size_t count);
   void reply_exception(std::uint8_t exception_code, std::size_t count);
+  // Sends the next `count` replies `delay` after their request arrived.
+  void reply_late(std::chrono::milliseconds delay, std::size_t count);
   // Holds every reply until `release` returns true (for the concurrency test of #57).
   void hold_replies_until(std::function<bool()> release);
 
   [[nodiscard]] std::size_t requests_received() const;
   [[nodiscard]] std::vector<std::vector<std::uint8_t>> request_frames() const;
+
+  // When one request frame arrived and, if the slave answered it, when the
+  // last byte of the reply was written; on a steady clock.
+  struct FrameTimes {
+    std::chrono::steady_clock::time_point request_received;
+    std::optional<std::chrono::steady_clock::time_point> reply_sent;
+  };
+  // One entry per request frame, in the order of request_frames().
+  [[nodiscard]] std::vector<FrameTimes> request_times() const;
 
  private:
   template <class T>
@@ -75,7 +87,7 @@ class SimulatedSlave {
   using Request = std::array<std::uint8_t, 8>;
 
   void serve();
-  void handle(const Request& request);
+  void handle(const Request& request, std::chrono::steady_clock::time_point received);
   // The reply to `request` with the pending faults applied; empty for none.
   std::vector<std::uint8_t> reply_to(const Request& request);
   std::vector<std::uint8_t> read_reply(std::uint8_t function, std::uint16_t first,
@@ -96,8 +108,10 @@ class SimulatedSlave {
   Pending<std::uint8_t> function_override_;
   Pending<std::uint8_t> byte_count_override_;
   Pending<std::uint8_t> exception_;
+  Pending<std::chrono::milliseconds> late_;
   std::function<bool()> release_;
   std::vector<std::vector<std::uint8_t>> frames_;
+  std::vector<FrameTimes> times_;
 
   std::atomic<bool> stop_{false};
   std::thread thread_;

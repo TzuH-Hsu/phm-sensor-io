@@ -360,3 +360,68 @@ TEST_F(SensorBusTest, ConcurrentReadsOnOnePortRunInTurn) {
             std::vector<std::vector<std::uint8_t>>(kThreads * std::size_t{kReadsPerThread},
                                                    frame("request_input_16_2")));
 }
+
+// Line state before every request (#1, contract addition): slave 10 on line-a,
+// no slave at address 11, response_timeout_ms 50, retries 0.
+
+TEST_F(SensorBusTest, AddressThatDoesNotAnswerDoesNotAffectTheNextRead) {
+  config_.ports.at(0).transaction.retries = 0;
+  sio::PointConfig point_x = config_.points.at(0);
+  point_x.name = "point-x";
+  point_x.slave_address = 11;
+  config_.points.push_back(point_x);
+  sio::SensorBus bus = make_bus(config_);
+
+  const sio::PointReading silent = read_point(bus, "point-x");
+  EXPECT_EQ(silent.quality, sio::Quality::timeout);
+  EXPECT_EQ(silent.fault, sio::Fault::no_reply);
+  EXPECT_EQ(silent.attempts, 1);
+
+  const sio::PointReading reading = read_point(bus);
+  EXPECT_EQ(reading.quality, sio::Quality::ok);
+  EXPECT_EQ(reading.attempts, 1);
+  EXPECT_EQ(reading.values.at(0).value, 125.0);
+  EXPECT_EQ(reading.values.at(1).value, -50.0);
+  ASSERT_EQ(slave_.requests_received(), 2U);
+  EXPECT_EQ(slave_.request_frames().at(0).at(0), 11);  // recorded, not answered
+}
+
+TEST_F(SensorBusTest, LateReplyIsNotTakenAsTheNextReadsReply) {
+  config_.ports.at(0).transaction.retries = 0;
+  sio::SensorBus bus = make_bus(config_);
+  slave_.reply_late(std::chrono::milliseconds{80}, 1);
+
+  const sio::PointReading timed_out = read_point(bus);
+  EXPECT_EQ(timed_out.quality, sio::Quality::timeout);
+  EXPECT_EQ(timed_out.fault, sio::Fault::no_reply);
+
+  // Wait until the late reply (0x00FA 0xFF38) has been sent, then change the
+  // registers: the next read must see the new words, not the late reply.
+  ASSERT_EQ(slave_.request_times().size(), 1U);
+  std::this_thread::sleep_until(slave_.request_times().at(0).request_received +
+                                std::chrono::milliseconds{100});
+  ASSERT_TRUE(slave_.request_times().at(0).reply_sent.has_value());
+  slave_.set_input_registers(16, {0x0064, 0x0028});
+
+  const sio::PointReading reading = read_point(bus);
+  EXPECT_EQ(reading.quality, sio::Quality::ok);
+  EXPECT_EQ(reading.values.at(0).raw, std::vector<std::uint16_t>{0x0064});
+  EXPECT_EQ(reading.values.at(1).raw, std::vector<std::uint16_t>{0x0028});
+  EXPECT_EQ(reading.values.at(0).value, 50.0);
+  EXPECT_EQ(reading.values.at(1).value, 10.0);
+}
+
+TEST_F(SensorBusTest, InterFrameSilenceIsKept) {
+  config_.ports.at(0).serial.baud = 9600;
+  sio::SensorBus bus = make_bus(config_);
+  EXPECT_EQ(read_point(bus).quality, sio::Quality::ok);
+  EXPECT_EQ(read_point(bus).quality, sio::Quality::ok);
+
+  const auto times = slave_.request_times();
+  ASSERT_EQ(times.size(), 2U);
+  ASSERT_TRUE(times.at(0).reply_sent.has_value());
+  // 3.5 characters of 11 bits at 9600 baud: 3.5 * 11 / 9600 s, just over 4.0 ms.
+  const auto gap = times.at(1).request_received -
+                   times.at(0).reply_sent.value_or(std::chrono::steady_clock::time_point::max());
+  EXPECT_GE(gap, std::chrono::microseconds{4000});
+}

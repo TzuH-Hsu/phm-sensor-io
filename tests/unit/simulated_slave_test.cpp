@@ -218,3 +218,30 @@ TEST_F(SimulatedSlaveTest, HoldsRepliesUntilReleased) {
   released = true;
   EXPECT_EQ(master.receive(), frame("reply_input_16_2"));
 }
+
+TEST_F(SimulatedSlaveTest, RepliesLate) {
+  const Master master(slave_);
+  slave_.reply_late(std::chrono::milliseconds{150}, 1);
+  master.send(frame("request_input_16_2"));
+  EXPECT_TRUE(master.receive(std::chrono::milliseconds{100}).empty());
+  EXPECT_EQ(master.receive(), frame("reply_input_16_2"));
+  master.send(frame("request_input_16_2"));
+  EXPECT_EQ(master.receive(std::chrono::milliseconds{100}), frame("reply_input_16_2"));
+}
+
+TEST_F(SimulatedSlaveTest, RecordsRequestAndReplyTimes) {
+  const Master master(slave_);
+  const auto before = std::chrono::steady_clock::now();
+  master.send(frame("crc_reference"));  // slave 1: recorded, not answered
+  EXPECT_TRUE(master.receive(std::chrono::milliseconds{50}).empty());
+  master.send(frame("request_input_16_2"));
+  EXPECT_EQ(master.receive(), frame("reply_input_16_2"));
+
+  const auto times = slave_.request_times();
+  ASSERT_EQ(times.size(), 2U);
+  EXPECT_GE(times.at(0).request_received, before);
+  EXPECT_FALSE(times.at(0).reply_sent.has_value());
+  ASSERT_TRUE(times.at(1).reply_sent.has_value());
+  EXPECT_GE(times.at(1).reply_sent.value_or(std::chrono::steady_clock::time_point::min()),
+            times.at(1).request_received);
+}

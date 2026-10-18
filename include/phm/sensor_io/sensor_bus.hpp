@@ -44,14 +44,16 @@ class SensorBus {
   SensorBus& operator=(const SensorBus&) = delete;
   ~SensorBus();  // closes every open port
 
-  // Reads every value of `point` in one transaction, with the port's retries:
-  // no_reply, crc_mismatch and malformed_reply are retried after the receive
-  // buffer is discarded; exception_response and io_error are not. At most
-  // 1 + retries request frames are sent, and the result reports the last
-  // attempt. After io_error the port is closed and opened again on its next
-  // read(). A failed transaction is a PointReading with its quality and fault,
-  // never a ReadError; an unknown point name is ReadError::unknown_point and
-  // sends nothing.
+  // Reads every value of `point` in one transaction, with the port's retries.
+  // Before every request frame, the first and each retry, the port waits for
+  // the RTU inter-frame silence since its last exchange (3.5 characters of 11
+  // bits, 1.75 ms above 19200 baud) and discards anything in its receive
+  // buffer; discarded bytes are not reported and do not count as attempts.
+  // no_reply, crc_mismatch and malformed_reply are retried; exception_response
+  // and io_error are not. At most 1 + retries request frames are sent, and the
+  // result reports the last attempt. After io_error the port is closed and
+  // opened again on its next read(). A failed transaction is a PointReading with its quality and
+  // fault, never a ReadError; an unknown point name is ReadError::unknown_point and sends nothing.
   [[nodiscard]] Result<PointReading, ReadError> read(std::string_view point);
 
   // The configuration as validated, with every default filled in.

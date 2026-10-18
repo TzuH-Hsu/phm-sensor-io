@@ -8,6 +8,12 @@
 // reply taken with modbus_receive_confirmation(), so this file classifies the
 // reply itself: libmodbus's own read functions turn an exception code they do
 // not know into a generic error and lose it.
+//
+// Line state before every request frame, the first attempt of a read as well
+// as each retry: the port waits until the RTU inter-frame silence has passed
+// since its last exchange, then discards anything in the receive buffer, so a
+// late reply to an earlier request, or bytes from a slave that answered after
+// it was given up, are never taken as the start of this request's reply.
 #include "modbus_rtu_port.hpp"
 
 #include <modbus.h>
@@ -22,6 +28,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -188,13 +195,29 @@ Context open_device(const PortConfig& config) {
 
 std::filesystem::path resolve_device(const PortConfig& port) { return port.device; }
 
+std::chrono::microseconds inter_frame_silence(std::uint32_t baud) noexcept {
+  constexpr std::uint32_t kFixedAbove = 19200;
+  constexpr std::chrono::microseconds kFixedSilence{1750};
+  if (baud > kFixedAbove) {
+    return kFixedSilence;
+  }
+  // 3.5 characters of 11 bits: 38.5 bit times, rounded up to whole microseconds.
+  constexpr std::uint64_t kBitTimesMicro = 38'500'000;
+  const std::uint64_t rate = std::max<std::uint32_t>(baud, 1);
+  return std::chrono::microseconds{static_cast<std::int64_t>((kBitTimesMicro + rate - 1) / rate)};
+}
+
 struct ModbusRtuPort::State {
   PortConfig config;
   Context context;  // empty while the device is closed
+  // When the last request frame on this port finished: its reply was received,
+  // or the wait for it ended. Empty before the first one.
+  std::optional<std::chrono::steady_clock::time_point> last_exchange;
 };
 
 ModbusRtuPort::ModbusRtuPort(PortConfig config)
-    : state_(std::make_unique<State>(State{.config = std::move(config), .context = nullptr})) {}
+    : state_(std::make_unique<State>(
+          State{.config = std::move(config), .context = nullptr, .last_exchange = {}})) {}
 
 ModbusRtuPort::~ModbusRtuPort() = default;
 
@@ -209,13 +232,16 @@ Exchange ModbusRtuPort::read_registers(std::uint8_t slave, ReadFunction function
     }
   }
   const unsigned max_attempts = 1U + state_->config.transaction.retries;
+  const std::chrono::microseconds silence = inter_frame_silence(state_->config.serial.baud);
   for (;;) {
-    if (exchange.attempts > 0) {
-      modbus_flush(state_->context.get());  // discard a late or partial reply
+    if (const auto last = state_->last_exchange) {
+      std::this_thread::sleep_until(*last + silence);
     }
+    modbus_flush(state_->context.get());  // discard a late or partial reply; not reported
     Attempt attempt = transact(state_->context.get(), slave, function, first, count);
     if (attempt.sent) {
       ++exchange.attempts;
+      state_->last_exchange = std::chrono::steady_clock::now();
     }
     exchange.fault = attempt.fault;
     exchange.exception_code = attempt.exception_code;

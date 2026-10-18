@@ -57,6 +57,12 @@ phm_sensor_io_add_unit_test(decode_test
   LIBS phm_sensor_io::phm_sensor_io
 )
 target_include_directories(decode_test PRIVATE "${PROJECT_SOURCE_DIR}/src")
+# modbus_rtu_port_test reaches the private modbus_rtu_port.hpp.
+phm_sensor_io_add_unit_test(modbus_rtu_port_test
+  SOURCES unit/modbus_rtu_port_test.cpp
+  LIBS phm_sensor_io::phm_sensor_io
+)
+target_include_directories(modbus_rtu_port_test PRIVATE "${PROJECT_SOURCE_DIR}/src")
 phm_sensor_io_add_unit_test(simulated_slave_test
   SOURCES unit/simulated_slave_test.cpp
   LIBS phm_sensor_io_test_support

@@ -172,6 +172,11 @@ void SimulatedSlave::reply_exception(std::uint8_t exception_code, std::size_t co
   exception_ = {.value = exception_code, .count = count};
 }
 
+void SimulatedSlave::reply_late(std::chrono::milliseconds delay, std::size_t count) {
+  const std::scoped_lock lock(mutex_);
+  late_ = {.value = delay, .count = count};
+}
+
 void SimulatedSlave::hold_replies_until(std::function<bool()> release) {
   const std::scoped_lock lock(mutex_);
   release_ = std::move(release);
@@ -187,6 +192,11 @@ std::vector<std::vector<std::uint8_t>> SimulatedSlave::request_frames() const {
   return frames_;
 }
 
+std::vector<SimulatedSlave::FrameTimes> SimulatedSlave::request_times() const {
+  const std::scoped_lock lock(mutex_);
+  return times_;
+}
+
 void SimulatedSlave::serve() {
   std::vector<std::uint8_t> pending;
   std::array<std::uint8_t, 256> buffer{};
@@ -200,33 +210,48 @@ void SimulatedSlave::serve() {
     if (length <= 0) {
       continue;
     }
+    const auto arrived = std::chrono::steady_clock::now();
     const auto received = std::span(buffer).first(static_cast<std::size_t>(length));
     pending.insert(pending.end(), received.begin(), received.end());
     while (pending.size() >= kRequestLength) {
       Request request{};
       std::copy_n(pending.begin(), kRequestLength, request.begin());
       pending.erase(pending.begin(), std::next(pending.begin(), kRequestLength));
-      handle(request);
+      handle(request, arrived);
     }
   }
 }
 
-void SimulatedSlave::handle(const Request& request) {
+void SimulatedSlave::handle(const Request& request,
+                            std::chrono::steady_clock::time_point received) {
   std::vector<std::uint8_t> reply;
   std::function<bool()> release;
+  std::optional<std::chrono::milliseconds> late;
+  std::size_t index = 0;
   {
     const std::scoped_lock lock(mutex_);
+    index = frames_.size();
     frames_.emplace_back(request.begin(), request.end());
+    times_.push_back({.request_received = received, .reply_sent = std::nullopt});
     reply = reply_to(request);
     release = release_;
+    if (!reply.empty() && take(late_)) {
+      late = late_.value;
+    }
   }
   if (reply.empty()) {
     return;
+  }
+  if (late) {
+    std::this_thread::sleep_until(received + *late);
   }
   while (release && !release() && !stop_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
   write_all(reply);
+  const auto sent = std::chrono::steady_clock::now();
+  const std::scoped_lock lock(mutex_);
+  times_.at(index).reply_sent = sent;
 }
 
 std::vector<std::uint8_t> SimulatedSlave::reply_to(const Request& request) {
