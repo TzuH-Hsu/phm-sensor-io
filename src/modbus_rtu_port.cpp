@@ -290,6 +290,9 @@ Exchange ModbusRtuPort::read_registers(std::uint8_t slave, ReadFunction function
     exchange.exception_code = attempt.exception_code;
     exchange.words = std::move(attempt.words);
     if (attempt.fault == Fault::io_error) {
+      // Whatever arrives while the device is closed is lost, so after the
+      // reopen prepare_line() watches the line for the full silence.
+      state_->last_exchange.reset();
       state_->context.reset();  // opened again on the next read
       break;
     }
