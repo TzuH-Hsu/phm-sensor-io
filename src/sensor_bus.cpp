@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "phm/sensor_io/sensor_bus.hpp"
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -90,6 +91,7 @@ Result<SensorBus, ConfigError> SensorBus::create(BusConfig config) {
 }
 
 Result<PointReading, ReadError> SensorBus::read(std::string_view point) {
+  assert(impl_ != nullptr && "read() on a moved-from SensorBus");
   const auto found = impl_->points.find(point);
   if (found == impl_->points.end()) {
     return Unexpected<ReadError>{ReadError::unknown_point};
@@ -129,6 +131,9 @@ Result<PointReading, ReadError> SensorBus::read(std::string_view point) {
   return reading;
 }
 
-const BusConfig& SensorBus::config() const noexcept { return impl_->config; }
+const BusConfig& SensorBus::config() const noexcept {
+  assert(impl_ != nullptr && "config() on a moved-from SensorBus");
+  return impl_->config;
+}
 
 }  // namespace phm::sensor_io

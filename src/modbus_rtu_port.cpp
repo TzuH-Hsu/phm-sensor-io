@@ -10,13 +10,14 @@
 // not know into a generic error and lose it.
 //
 // Line state before every request frame, the first attempt of a read as well
-// as each retry: the port waits until the RTU inter-frame silence has passed
-// since its last exchange, then discards anything in the receive buffer, so a
-// late reply to an earlier request, or bytes from a slave that answered after
-// it was given up, are never taken as the start of this request's reply.
+// as each retry (prepare_line()): the line must have been silent for the RTU
+// inter-frame silence since the last frame sent or received on the port, and
+// the receive buffer is discarded, so a reply that arrives after its read has
+// given up is never taken as the start of the next request's reply.
 #include "modbus_rtu_port.hpp"
 
 #include <modbus.h>
+#include <poll.h>
 
 #include <algorithm>
 #include <array>
@@ -207,6 +208,50 @@ std::chrono::microseconds inter_frame_silence(std::uint32_t baud) noexcept {
   return std::chrono::microseconds{static_cast<std::int64_t>((kBitTimesMicro + rate - 1) / rate)};
 }
 
+namespace {
+
+// Waits until the line has been silent for `silence` since the last frame
+// sent or received on it, discarding whatever arrives meanwhile.
+//
+// `last_exchange` is when the last request frame's exchange ended: its reply
+// was received, or the wait for it ended. Every byte received after that is
+// still in the receive buffer, so an empty buffer once `silence` has passed
+// since `last_exchange` means the line has been silent that long. Otherwise
+// (bytes arrived, at an unknown time, or nothing is known about the line yet)
+// the buffer is discarded and the line watched until it stays quiet for
+// `silence`, or until `give_up`, so a noisy line cannot hold a read forever.
+void prepare_line(modbus_t* context,
+                  std::optional<std::chrono::steady_clock::time_point> last_exchange,
+                  std::chrono::microseconds silence,
+                  std::chrono::steady_clock::time_point give_up) {
+  if (last_exchange) {
+    std::this_thread::sleep_until(*last_exchange + silence);
+  }
+  // poll() takes milliseconds, so the watched silence rounds up.
+  const int silence_ms =
+      static_cast<int>(std::chrono::ceil<std::chrono::milliseconds>(silence).count());
+  bool quiet_since_last_exchange = last_exchange.has_value();
+  for (;;) {
+    pollfd line{.fd = modbus_get_socket(context), .events = POLLIN, .revents = 0};
+    const int ready = poll(&line, 1, quiet_since_last_exchange ? 0 : silence_ms);
+    if (ready == -1 && errno == EINTR) {
+      continue;  // interrupted before the silence was over: watch again
+    }
+    constexpr auto kLineError = static_cast<unsigned>(POLLERR | POLLHUP | POLLNVAL);
+    if (ready <= 0 || (static_cast<unsigned>(line.revents) & kLineError) != 0U) {
+      break;  // silent long enough; a device error is left to the send to report
+    }
+    modbus_flush(context);  // discarded bytes are not reported
+    quiet_since_last_exchange = false;
+    if (std::chrono::steady_clock::now() >= give_up) {
+      break;
+    }
+  }
+  modbus_flush(context);  // anything that arrived since the last check
+}
+
+}  // namespace
+
 struct ModbusRtuPort::State {
   PortConfig config;
   Context context;  // empty while the device is closed
@@ -234,10 +279,8 @@ Exchange ModbusRtuPort::read_registers(std::uint8_t slave, ReadFunction function
   const unsigned max_attempts = 1U + state_->config.transaction.retries;
   const std::chrono::microseconds silence = inter_frame_silence(state_->config.serial.baud);
   for (;;) {
-    if (const auto last = state_->last_exchange) {
-      std::this_thread::sleep_until(*last + silence);
-    }
-    modbus_flush(state_->context.get());  // discard a late or partial reply; not reported
+    prepare_line(state_->context.get(), state_->last_exchange, silence,
+                 std::chrono::steady_clock::now() + state_->config.transaction.response_timeout);
     Attempt attempt = transact(state_->context.get(), slave, function, first, count);
     if (attempt.sent) {
       ++exchange.attempts;

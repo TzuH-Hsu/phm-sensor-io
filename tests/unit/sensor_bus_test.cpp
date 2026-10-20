@@ -411,6 +411,28 @@ TEST_F(SensorBusTest, LateReplyIsNotTakenAsTheNextReadsReply) {
   EXPECT_EQ(reading.values.at(1).value, 10.0);
 }
 
+TEST_F(SensorBusTest, SilenceIsKeptAfterALateReply) {
+  config_.ports.at(0).serial.baud = 9600;
+  config_.ports.at(0).transaction.retries = 0;
+  sio::SensorBus bus = make_bus(config_);
+  slave_.reply_late(std::chrono::milliseconds{80}, 1);
+  EXPECT_EQ(read_point(bus).fault, sio::Fault::no_reply);
+
+  // Read again as soon as the late reply has been written.
+  const auto give_up = std::chrono::steady_clock::now() + std::chrono::milliseconds{500};
+  while (!slave_.request_times().at(0).reply_sent && std::chrono::steady_clock::now() < give_up) {
+    std::this_thread::sleep_for(std::chrono::microseconds{100});
+  }
+  ASSERT_TRUE(slave_.request_times().at(0).reply_sent.has_value());
+  EXPECT_EQ(read_point(bus).quality, sio::Quality::ok);
+
+  const auto times = slave_.request_times();
+  ASSERT_EQ(times.size(), 2U);
+  const auto late_reply_sent =
+      times.at(0).reply_sent.value_or(std::chrono::steady_clock::time_point::max());
+  EXPECT_GE(times.at(1).request_received - late_reply_sent, std::chrono::microseconds{4000});
+}
+
 TEST_F(SensorBusTest, InterFrameSilenceIsKept) {
   config_.ports.at(0).serial.baud = 9600;
   sio::SensorBus bus = make_bus(config_);

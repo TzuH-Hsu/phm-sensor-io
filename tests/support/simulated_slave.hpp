@@ -59,7 +59,9 @@ class SimulatedSlave {
   // Sets the byte count field to `byte_count` and sends that many data bytes.
   void reply_with_byte_count(std::uint8_t byte_count, std::size_t count);
   void reply_exception(std::uint8_t exception_code, std::size_t count);
-  // Sends the next `count` replies `delay` after their request arrived.
+  // Sends the next `count` replies `delay` after their request arrived. The
+  // delay is spent on the serving thread, so a request that arrives meanwhile
+  // is read only after the late reply has been written.
   void reply_late(std::chrono::milliseconds delay, std::size_t count);
   // Holds every reply until `release` returns true (for the concurrency test of #57).
   void hold_replies_until(std::function<bool()> release);

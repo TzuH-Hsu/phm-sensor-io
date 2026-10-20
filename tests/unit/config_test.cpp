@@ -175,6 +175,14 @@ TEST(Config, InvalidJsonIsADocumentError) {
   EXPECT_FALSE(result.error().message.empty());
 }
 
+TEST(Config, NumberBeyondDoubleIsADocumentError) {
+  const auto result =
+      sio::parse_config(R"({"bus": "modbus_rtu", "ports": [], "points": [], "x": 1e400})");
+  ASSERT_FALSE(result.has_value());
+  EXPECT_EQ(result.error().pointer, "");
+  EXPECT_FALSE(result.error().message.empty());
+}
+
 TEST(Config, SlaveAddressBoundaries) {
   EXPECT_EQ(error_pointer(defaults_with(R"("slave_address": 10)", R"("slave_address": 1)")),
             "accepted");
@@ -356,6 +364,48 @@ TEST(Config, BuiltInCodeGivesTheSamePointers) {
     EXPECT_EQ(validate_pointer(config), "/points/0/values");
   }
   EXPECT_EQ(validate_pointer(defaults_config()), "accepted");
+}
+
+TEST(Config, FirstOfTwoErrorsIsTheSameForADocumentAndForCode) {
+  // A relative device path and slave address 0: a document and the
+  // equivalent BusConfig both report the device, which comes first.
+  const std::string document =
+      defaults_with(R"("device": "/dev/ttyTEST0")", R"("device": "dev/ttyTEST0")");
+  const std::string both = [&document] {
+    std::string text = document;
+    const std::string from = R"("slave_address": 10)";
+    text.replace(text.find(from), from.size(), R"("slave_address": 0)");
+    return text;
+  }();
+  EXPECT_EQ(error_pointer(both), "/ports/0/device");
+
+  sio::BusConfig config = defaults_config();
+  config.ports.at(0).device = "dev/ttyTEST0";
+  config.points.at(0).slave_address = 0;
+  EXPECT_EQ(validate_pointer(config), "/ports/0/device");
+}
+
+TEST(Config, ValueThatDoesNotFitItsFieldIsReportedWithTheRule) {
+  const auto result =
+      sio::parse_config(defaults_with(R"("slave_address": 10)", R"("slave_address": 300)"));
+  ASSERT_FALSE(result.has_value());
+  EXPECT_EQ(result.error().pointer, "/points/0/slave_address");
+  EXPECT_EQ(result.error().message, "must be an integer from 1 to 247 (0 is broadcast)");
+}
+
+TEST(Config, WordOrderKeyOnA16BitValueIsReportedAfterTheOtherRules) {
+  // high_first on an int16 cannot be told from the default in a BusConfig, so
+  // the device error, which validate() also reports, comes first.
+  const std::string text =
+      defaults_with(R"("type": "uint16")", R"("type": "int16", "word_order": "high_first")");
+  EXPECT_EQ(error_pointer(text), "/points/0/values/0/word_order");
+  EXPECT_EQ(error_pointer([&text] {
+              std::string both = text;
+              const std::string from = R"("device": "/dev/ttyTEST0")";
+              both.replace(both.find(from), from.size(), R"("device": "dev/ttyTEST0")");
+              return both;
+            }()),
+            "/ports/0/device");
 }
 
 TEST(SensorBusCreate, RejectsAnInvalidConfiguration) {

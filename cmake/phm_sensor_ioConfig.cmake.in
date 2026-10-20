@@ -24,6 +24,17 @@ if(NOT TARGET PkgConfig::PHM_SENSOR_IO_LIBMODBUS)
       "phm_sensor_io needs libmodbus, which pkg-config cannot find (pkg-config --exists libmodbus)")
     return()
   endif()
+  # The LGPL condition, as in this library's own build: a consumer of the
+  # static library must link libmodbus dynamically, so a static archive is
+  # refused here too.
+  foreach(library IN LISTS PHM_SENSOR_IO_LIBMODBUS_LINK_LIBRARIES)
+    if(library MATCHES "\\.a$")
+      set(phm_sensor_io_FOUND FALSE)
+      set(phm_sensor_io_NOT_FOUND_MESSAGE
+        "phm_sensor_io needs the shared libmodbus, but pkg-config resolves the static archive ${library}; install the shared library")
+      return()
+    endif()
+  endforeach()
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/phm_sensor_ioTargets.cmake")

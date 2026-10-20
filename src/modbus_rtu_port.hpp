@@ -40,8 +40,9 @@ class ModbusRtuPort {
 
   // Reads `count` registers from `first` of `slave` with `function`, opening
   // the device first if it is not open. Before every request frame, the first
-  // and each retry, it keeps the inter-frame silence since the port's last
-  // exchange and then discards the receive buffer. no_reply, crc_mismatch and
+  // and each retry, it waits until the line has been silent for the
+  // inter-frame silence since the last frame sent or received, discarding the
+  // receive buffer. no_reply, crc_mismatch and
   // malformed_reply are retried up to the port's retries; exception_response
   // is not retried; io_error closes the device, which the next call opens
   // again.

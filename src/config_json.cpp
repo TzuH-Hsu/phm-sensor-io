@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // parse_config() and load_config(): the JSON document to BusConfig. The only
-// file that includes the JSON parser. It checks what a BusConfig cannot hold
-// (unknown and missing keys, JSON types, integers outside their range) in
-// document order, then leaves every other rule to validate().
+// file that includes the JSON parser.
+//
+// The parser reports only what a BusConfig cannot hold, in document order:
+// unknown and missing keys, wrong JSON types, an integer that does not fit
+// its field's type, a text value that is not one of its field's choices. Every
+// other rule is validate()'s, so a document and the equivalent BusConfig give
+// the same first error. One rule needs the document itself: a "word_order"
+// key on a 16-bit value, which a BusConfig cannot tell from the default; it is
+// reported last, once validate() has passed.
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
@@ -85,9 +91,13 @@ Error read_string(const Json& object, const std::string& at, std::string_view ke
   return std::nullopt;
 }
 
-// An integer within [min, max]. 19200.0 and "19200" are not integers.
+// An integer that fits `T`, the type of its field; whether it meets the
+// field's rule is validate()'s. 19200.0 and "19200" are not integers. A value
+// that does not fit `T` cannot meet the rule either, so it is reported with
+// the rule's message, as validate() would report it.
+template <class T>
 Error read_integer(const Json& object, const std::string& at, std::string_view key,
-                   std::int64_t min, std::int64_t max, std::string_view rule, std::int64_t& out) {
+                   std::string_view rule, T& out) {
   const Json* member = find_member(object, key);
   if (member == nullptr) {
     return std::nullopt;
@@ -95,14 +105,19 @@ Error read_integer(const Json& object, const std::string& at, std::string_view k
   if (!member->is_number_integer()) {
     return error_at(member_at(at, key), "must be an integer");
   }
-  if (member->is_number_unsigned() && member->get<std::uint64_t>() > std::uint64_t{INT64_MAX}) {
-    return error_at(member_at(at, key), rule);
+  if (member->is_number_unsigned()) {
+    const auto value = member->get<std::uint64_t>();
+    if (!std::in_range<T>(value)) {
+      return error_at(member_at(at, key), rule);
+    }
+    out = static_cast<T>(value);
+    return std::nullopt;
   }
   const auto value = member->get<std::int64_t>();
-  if (value < min || value > max) {
+  if (!std::in_range<T>(value)) {
     return error_at(member_at(at, key), rule);
   }
-  out = value;
+  out = static_cast<T>(value);
   return std::nullopt;
 }
 
@@ -156,46 +171,35 @@ Error read_choice(const Json& object, const std::string& at, std::string_view ke
 }
 
 Error read_serial(const Json& node, const std::string& at, SerialSettings& serial) {
-  std::int64_t baud = serial.baud;
-  if (Error error = read_integer(node, at, "baud", 0, INT64_MAX, detail::baud_rule(), baud)) {
+  if (Error error = read_integer(node, at, "baud", detail::baud_rule(), serial.baud)) {
     return error;
   }
-  if (!detail::is_valid_baud(baud)) {
-    return error_at(at + "/baud", detail::baud_rule());
-  }
-  serial.baud = static_cast<std::uint32_t>(baud);
   if (Error error = read_choice<Parity>(
           node, at, "parity",
           {{"none", Parity::none}, {"even", Parity::even}, {"odd", Parity::odd}},
           detail::kParityRule, serial.parity)) {
     return error;
   }
-  std::int64_t stop_bits = serial.stop_bits;
-  if (Error error = read_integer(node, at, "stop_bits", detail::kStopBitsMin, detail::kStopBitsMax,
-                                 detail::kStopBitsRule, stop_bits)) {
+  if (Error error = read_integer(node, at, "stop_bits", detail::kStopBitsRule, serial.stop_bits)) {
     return error;
   }
-  serial.stop_bits = static_cast<std::uint8_t>(stop_bits);
   return std::nullopt;
 }
 
 Error read_transaction(const Json& node, const std::string& at, TransactionSettings& transaction) {
-  std::int64_t timeout_ms = transaction.response_timeout.count();
+  auto timeout_ms = transaction.response_timeout.count();
   if (Error error = read_integer(
-          node, at, "response_timeout_ms", detail::kResponseTimeoutMinMs,
-          detail::kResponseTimeoutMaxMs,
+          node, at, "response_timeout_ms",
           detail::integer_range_rule(detail::kResponseTimeoutMinMs, detail::kResponseTimeoutMaxMs),
           timeout_ms)) {
     return error;
   }
   transaction.response_timeout = std::chrono::milliseconds{timeout_ms};
-  std::int64_t retries = transaction.retries;
   if (Error error = read_integer(
-          node, at, "retries", detail::kRetriesMin, detail::kRetriesMax,
-          detail::integer_range_rule(detail::kRetriesMin, detail::kRetriesMax), retries)) {
+          node, at, "retries", detail::integer_range_rule(detail::kRetriesMin, detail::kRetriesMax),
+          transaction.retries)) {
     return error;
   }
-  transaction.retries = static_cast<std::uint8_t>(retries);
   return std::nullopt;
 }
 
@@ -238,10 +242,6 @@ Error read_value_type(const Json& node, const std::string& at, ValueConfig& valu
           detail::kWordOrderRule, value.word_order)) {
     return error;
   }
-  const bool is_16_bit = value.type == ValueType::int16 || value.type == ValueType::uint16;
-  if (is_16_bit && find_member(node, "word_order") != nullptr) {
-    return error_at(at + "/word_order", detail::kWordOrderTypeRule);
-  }
   return std::nullopt;
 }
 
@@ -255,14 +255,12 @@ Error read_value(const Json& node, const std::string& at, ValueConfig& value) {
   if (Error error = read_string(node, at, "name", value.name)) {
     return error;
   }
-  std::int64_t register_address = 0;
   if (Error error =
-          read_integer(node, at, "register", detail::kRegisterMin, detail::kRegisterMax,
+          read_integer(node, at, "register",
                        detail::integer_range_rule(detail::kRegisterMin, detail::kRegisterMax),
-                       register_address)) {
+                       value.register_address)) {
     return error;
   }
-  value.register_address = static_cast<std::uint16_t>(register_address);
   if (Error error = read_value_type(node, at, value)) {
     return error;
   }
@@ -313,13 +311,10 @@ Error read_point(const Json& node, const std::string& at, PointConfig& point) {
   if (Error error = read_string(node, at, "port", point.port)) {
     return error;
   }
-  std::int64_t slave_address = 0;
   if (Error error =
-          read_integer(node, at, "slave_address", detail::kSlaveAddressMin,
-                       detail::kSlaveAddressMax, detail::kSlaveAddressRule, slave_address)) {
+          read_integer(node, at, "slave_address", detail::kSlaveAddressRule, point.slave_address)) {
     return error;
   }
-  point.slave_address = static_cast<std::uint8_t>(slave_address);
   if (Error error = read_choice<ReadFunction>(
           node, at, "function",
           {
@@ -330,6 +325,26 @@ Error read_point(const Json& node, const std::string& at, PointConfig& point) {
     return error;
   }
   return read_array(node, at, "values", point.values, read_value);
+}
+
+// A "word_order" key on a 16-bit value. `config` is the BusConfig read from
+// `root`, so the two have the same points and values in the same order.
+Error check_word_order_keys(const Json& root, const BusConfig& config) {
+  std::size_t point_index = 0;
+  for (const PointConfig& point : config.points) {
+    const Json& values = root.at("points").at(point_index).at("values");
+    const std::string at = "/points/" + std::to_string(point_index++) + "/values/";
+    std::size_t value_index = 0;
+    for (const ValueConfig& value : point.values) {
+      const bool is_16_bit = value.type == ValueType::int16 || value.type == ValueType::uint16;
+      if (is_16_bit && values.at(value_index).contains("word_order")) {
+        return error_at(at + std::to_string(value_index) + "/word_order",
+                        detail::kWordOrderTypeRule);
+      }
+      ++value_index;
+    }
+  }
+  return std::nullopt;
 }
 
 Error read_document(const Json& root, BusConfig& config) {
@@ -356,7 +371,8 @@ Result<BusConfig, ConfigError> parse_config(std::string_view json_text) {
   Json root;
   try {
     root = Json::parse(json_text);
-  } catch (const Json::parse_error& error) {
+  } catch (const Json::exception& error) {  // parse_error, or out_of_range 406 for a number
+                                            // that does not fit a double, such as 1e400
     return Unexpected<ConfigError>{{.pointer = "", .message = error.what()}};
   }
   BusConfig config;
@@ -364,6 +380,9 @@ Result<BusConfig, ConfigError> parse_config(std::string_view json_text) {
     return Unexpected<ConfigError>{std::move(*error)};
   }
   if (Error error = validate(config)) {
+    return Unexpected<ConfigError>{std::move(*error)};
+  }
+  if (Error error = check_word_order_keys(root, config)) {
     return Unexpected<ConfigError>{std::move(*error)};
   }
   return config;
