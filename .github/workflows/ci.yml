@@ -79,8 +79,9 @@ jobs:
           # to every later step (and to any tool binary they install).
           persist-credentials: false
 
-      # Fails this required check when the head branch is not
-      # <type>/<issue#>-<slug> or the body links no issue — the logic is
+      # Fails this required check when the head branch is neither
+      # <type>/<issue#>-<slug> nor <type>/<slug>, or the body does not state its
+      # issue relation (Closes / Refs / No issue: <reason>) — the logic is
       # scripts/pr-lint.js (ADR-0008), tested by `make check`. Bot PRs are
       # exempt by author (dependabot[bot], github-actions[bot]) or by
       # release-please's `autorelease: pending` label — never by branch name.
