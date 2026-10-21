@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.7...v0.3.0) (2026-10-21)
+
+
+### Features
+
+* add the SensorBus interface and a Modbus RTU transport ([#78](https://github.com/TzuH-Hsu/phm-sensor-io/issues/78)) ([ade629f](https://github.com/TzuH-Hsu/phm-sensor-io/commit/ade629f13739277a2f9aac97dc9f714c81302ae7))
+
 ## [0.2.7](https://github.com/TzuH-Hsu/phm-sensor-io/compare/v0.2.6...v0.2.7) (2026-09-29)
 
 
