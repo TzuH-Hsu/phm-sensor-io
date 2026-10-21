@@ -110,6 +110,8 @@ copied from it.
 | AGENTS.md (operating rules 1 and 2, Workflow 2 and 4), CONTRIBUTING.md (Branches & commits, Pull requests), skills/pr-authoring/SKILL.md (rule 5, How, Pitfalls), skills/branch-and-commit/SKILL.md (rule 1, How) | Describe the two branch forms and the three issue relations | Same rule as pr-lint | #76 |
 | .github/workflows/ci.yml `Lint the pull request` step | The comment above the step names both branch forms and the three issue relations | Same rule as pr-lint; comment only, the step is unchanged | #79 |
 | docs/adr/ADR-0008-event-workflow-logic-in-scripts.md (status line) | Marked partially superseded (2026-10-16) by the PR-lint relation rule and its token use; the body is unchanged | The PR lint's checks changed after the ADR was accepted | #79 |
+| Makefile | `setup` also reports a missing pkg-config or libmodbus; `ci-tools` with its default tool list also runs the new `ci-system-packages` target, which installs `libmodbus-dev` and `pkg-config` with apt-get (in CI or with `ALLOW_LOCAL_INSTALL=1`); the `test-one` usage example names `TEST=SensorBus` | The library links the shared libmodbus, which CI installs from the distribution through the Makefile, not the workflow | #1 |
+| CONTRIBUTING.md tool-install table | Adds a libmodbus and pkg-config row | The C++ build needs them | #1 |
 
 ## Local additions in template directories
 
@@ -123,10 +125,10 @@ copied from it.
 | Makefile: `sbom` target | Writes an SPDX SBOM and a readable third-party licence list to `dist/`, for the repository and each image in `SBOM_IMAGES` | 73653b8 (#41) |
 | scripts/tool-pins.extra | Pins for CI tools this repository adds (syft, cmake, ninja), read by `make check-tool-versions` | #52, #68 |
 | scripts/install-extra-tools.sh | Installs the tools pinned in `scripts/tool-pins.extra`, checksum verified; called by `make ci-tools` | #52, #68 |
-| CMakeLists.txt, CMakePresets.json, cmake/ | CMake project for the `phm_sensor_io` library (`dev`, `asan-ubsan` presets; GoogleTest pinned in cmake/Dependencies.cmake; install rules and the package configuration template cmake/phm_sensor_ioConfig.cmake.in) | #68, #74 |
+| CMakeLists.txt, CMakePresets.json, cmake/ | CMake project for the `phm_sensor_io` library (`dev`, `asan-ubsan` presets; libmodbus found with pkg-config, nlohmann/json and GoogleTest pinned in cmake/Dependencies.cmake; install rules and the package configuration template cmake/phm_sensor_ioConfig.cmake.in) | #68, #74, #1 |
 | .clang-format, .clang-tidy | C++ formatting and static-analysis configuration for `make lint-cpp` | #68 |
-| include/, src/, tests/ | Library public headers, sources and unit tests; tests/consumer/ is a separate CMake project built against the installed package | #68, #74 |
-| docs/development.md | Common commands, tools, where each tool version is set, source layout and troubleshooting for building and testing | #68, #72 |
+| include/, src/, tests/ | Library public headers, sources and unit tests; tests/support/ holds the simulated Modbus RTU slave, tests/fixtures/ the test data; tests/consumer/ is a separate CMake project built against the installed package | #68, #74, #1 |
+| docs/development.md | Common commands, tools, where each tool version is set, source layout and troubleshooting for building and testing | #68, #72, #1 |
 | docs/template-drift.md | This inventory of deliberate differences from the template | #43 |
 
 ## Local rules that conflict with kit files

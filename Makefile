@@ -14,7 +14,7 @@
 # Customize tool invocations HERE, not in .github/workflows/*.
 
 SHELL := /usr/bin/env bash
-.PHONY: help setup lint-licenses sbom lint-docs lint-docs-external lint-actions lint-secrets lint-cpp check lint configure build test-unit test-sanitize test test-one clean test-install verify ci-pr ci-tools check-tool-versions maintenance
+.PHONY: help setup lint-licenses sbom lint-docs lint-docs-external lint-actions lint-secrets lint-cpp check lint configure build test-unit test-sanitize test test-one clean test-install verify ci-pr ci-tools ci-system-packages check-tool-versions maintenance
 
 .DEFAULT_GOAL := help
 
@@ -65,8 +65,9 @@ LLVM_HINT = install: brew install llvm, then put "$$(brew --prefix llvm)/bin" on
 
 # The tools `make verify` needs besides clang-format and clang-tidy, which are
 # checked separately because their names may carry a version suffix.
-# CONTRIBUTING.md says how to install each one.
-DEV_TOOLS := cmake ninja markdownlint-cli2 yamllint lychee node actionlint gitleaks syft python3
+# CONTRIBUTING.md says how to install each one. libmodbus, which the library
+# links, is checked through pkg-config.
+DEV_TOOLS := cmake ninja pkg-config markdownlint-cli2 yamllint lychee node actionlint gitleaks syft python3
 
 # The audit runs before configuring, so one run lists every missing tool even
 # when cmake or ninja is among them.
@@ -77,6 +78,9 @@ setup: ## Report every development tool missing from PATH and configure the dev 
 	done; \
 	test -n "$(CLANG_FORMAT)" || { echo 'missing: clang-format ($(LLVM_HINT))'; missing=1; }; \
 	test -n "$(CLANG_TIDY)" || { echo 'missing: clang-tidy ($(LLVM_HINT))'; missing=1; }; \
+	if command -v pkg-config >/dev/null 2>&1 && ! pkg-config --exists libmodbus; then \
+		echo "missing: libmodbus (see CONTRIBUTING.md)"; missing=1; \
+	fi; \
 	if command -v cmake >/dev/null 2>&1 && command -v ninja >/dev/null 2>&1; then \
 		$(MAKE) --no-print-directory configure || exit 1; \
 	fi; \
@@ -107,7 +111,7 @@ test: test-unit test-sanitize ## L1 - unit tests, plain and sanitized
 # names, which are the GoogleTest names <Suite>.<Test>.
 # The usage check runs before the build, so a missing TEST fails at once.
 test-one: ## Run the unit tests matching TEST=<regex> on the host build
-	@test -n "$(TEST)" || { echo 'usage: make test-one TEST=<regex>, for example TEST=Skeleton'; exit 2; }
+	@test -n "$(TEST)" || { echo 'usage: make test-one TEST=<regex>, for example TEST=SensorBus'; exit 2; }
 	@$(MAKE) --no-print-directory build
 	ctest --preset dev -R '$(TEST)'
 
@@ -166,6 +170,9 @@ ci-pr: verify ## Alias of verify; what ci.yml runs
 # this repository adds (EXTRA_CI_TOOLS, pinned in scripts/tool-pins.extra) go to
 # scripts/install-extra-tools.sh, so the kit script stays identical to upstream.
 # The C++ compiler, clang-format and clang-tidy come from the runner image.
+# With the default TOOLS, ci-tools also installs CI_SYSTEM_PACKAGES, the
+# distribution packages the C++ build needs (ci-system-packages); a run that
+# names its own TOOLS, such as maintenance.yml's, does not.
 CI_TOOLS := markdownlint-cli2 yamllint actionlint gitleaks lychee syft cmake ninja
 EXTRA_CI_TOOLS := syft cmake ninja
 TOOLS ?= $(CI_TOOLS)
@@ -174,6 +181,22 @@ ci-tools: ## Install pinned CI tools (Linux x86_64; locally with ALLOW_LOCAL_INS
 	@set -e; kit="$(filter-out $(EXTRA_CI_TOOLS),$(TOOLS))"; extra="$(filter $(EXTRA_CI_TOOLS),$(TOOLS))"; \
 	if [ -n "$$kit" ]; then scripts/install-ci-tools.sh $$kit; fi; \
 	if [ -n "$$extra" ]; then scripts/install-extra-tools.sh $$extra; fi
+	@if [ "$(origin TOOLS)" = "file" ]; then $(MAKE) --no-print-directory ci-system-packages; fi
+
+# The shared libmodbus the Modbus RTU transport links (dynamically, as
+# libmodbus.so) and pkg-config, which CMake uses to find it. They come from the
+# distribution at its version, with apt-get, as the compiler does; on another
+# system install them with its package manager (CONTRIBUTING.md).
+CI_SYSTEM_PACKAGES := libmodbus-dev pkg-config
+
+ci-system-packages: ## Install the distribution packages the C++ build needs (apt-get; in CI or with ALLOW_LOCAL_INSTALL=1)
+	@command -v apt-get >/dev/null 2>&1 || { echo "ci-system-packages: needs apt-get; install $(CI_SYSTEM_PACKAGES) with your package manager (CONTRIBUTING.md)"; exit 1; }
+	@if [ -z "$$CI" ] && [ "$$ALLOW_LOCAL_INSTALL" != 1 ]; then \
+		echo "ci-system-packages: refusing to run apt-get outside CI; set ALLOW_LOCAL_INSTALL=1 to install $(CI_SYSTEM_PACKAGES)"; exit 1; \
+	fi
+	@sudo_cmd=""; [ "$$(id -u)" -eq 0 ] || sudo_cmd="sudo"; \
+	$$sudo_cmd apt-get update -qq && \
+	$$sudo_cmd apt-get install -y -qq --no-install-recommends $(CI_SYSTEM_PACKAGES)
 
 check-tool-versions: ## Compare CI tool pins against upstream (weekly maintenance; makes network calls)
 	scripts/check-tool-versions.sh

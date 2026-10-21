@@ -1,0 +1,6 @@
+{
+  "bus": "modbus_rtu",
+  "ports": [{ "name": "line-a", "device": "/dev/ttyTEST0" }],
+  "points": [{ "name": "point-1", "port": "line-a", "slave_address": 10, "function": "read_input_registers",
+               "values": [{ "name": "value_a", "register": 16, "type": "uint16" }] }]
+}
