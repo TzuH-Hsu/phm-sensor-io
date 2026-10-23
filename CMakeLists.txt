@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.28...4.4)
 # The version is the release version; release-please updates the line below
 # (release-please-config.json, extra-files). The installed package reports it
 # to find_package().
-project(phm_sensor_io VERSION 0.2.7 LANGUAGES CXX) # x-release-please-version
+project(phm_sensor_io VERSION 0.3.0 LANGUAGES CXX) # x-release-please-version
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
