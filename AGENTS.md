@@ -108,6 +108,15 @@ Other conventions:
 - Dependency licences are allowed when compliant — downstream users ship commercial products, so no obligation may reach their code. Permissive licences are used directly: MIT, Apache-2.0, BSD, ISC, plus notice-only licences (curl, blessing, Zlib, PSF-2.0, PostgreSQL, BSL-1.0, CC-BY-4.0). Weak copyleft is allowed under conditions — LGPL through dynamic linking only, MPL-2.0 for unmodified files with source available — and each such component needs an entry in `scripts/licence-exceptions.json` stating its condition, with the reasoning written in this repository's own documentation (README, Third-party licences). Strong copyleft (GPL, AGPL, SSPL) is not linked. Development-only dependencies are not checked.
 - Contributions are provided under Apache-2.0 by default (Apache-2.0 §5). No CLA.
 
+## Code Review Rules
+
+When reviewing a pull request, check the following and report only actual problems:
+
+- **Issue and documentation**: compare the change with the linked issue's Contract and Interface, and with what `README.md`, `docs/development.md` and the public headers state. Flag behaviour that differs from them, such as a reading reported as `ok` when it is not, or a raw register value that is no longer kept alongside the decoded one.
+- **Public API, ABI and configuration format**: changes under `include/phm/sensor_io/` (signatures, types, enum values, error results, ownership and lifetime) and to the point configuration file format. Flag breaking changes the pull request does not call out, and configuration files that used to load and no longer do.
+- **Data integrity and safety**: readings silently dropped, interpolated or mis-scaled; framing and CRC checks on bus input; buffer bounds on anything read from the bus or a configuration file; thread safety. Code, tests and fixtures carry no credentials, real deployment detail or captured data.
+- Do not comment on formatting, naming, include order or anything `make lint` catches.
+
 ## Pointers
 
 - Process and conventions for humans: `CONTRIBUTING.md`
