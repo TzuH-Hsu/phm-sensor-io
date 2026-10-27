@@ -113,6 +113,7 @@ copied from it.
 | Makefile | `setup` also reports a missing pkg-config or libmodbus; `ci-tools` with its default tool list also runs the new `ci-system-packages` target, which installs `libmodbus-dev` and `pkg-config` with apt-get (in CI or with `ALLOW_LOCAL_INSTALL=1`); the `test-one` usage example names `TEST=SensorBus` | The library links the shared libmodbus, which CI installs from the distribution through the Makefile, not the workflow | #1 |
 | CONTRIBUTING.md tool-install table | Adds a libmodbus and pkg-config row | The C++ build needs them | #1 |
 | AGENTS.md (AI agent conventions, Provenance), skills/agent-workflow/SKILL.md (rule 5), skills/anti-patterns/SKILL.md (Agent over-trust row and paragraph), docs/adr/ADR-0007-retire-agent-labels.md (status line) | Provenance is the PR author account only; commits carry no `Co-Authored-By` or other attribution trailers; ADR-0007 is marked partially superseded | Commits and PR bodies carry no attribution | #82, #83 |
+| AGENTS.md (Code Review Rules) | Adds a "Code Review Rules" section before "Pointers": what a pull request review checks here (the linked issue and the documentation, public API, ABI and configuration format compatibility, data integrity and safety) and that formatting, naming, include order and anything `make lint` catches are out of scope | The template has no repository-specific review criteria; automated pull request review reads them from AGENTS.md | #84 |
 
 ## Local additions in template directories
 
