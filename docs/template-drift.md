@@ -99,7 +99,7 @@ copied from it.
 | .gitignore, .yamllint.yml | Ignore `build/` (and `CMakeUserPresets.json` in .gitignore) | CMake build trees are not delivered content | #68 |
 | .github/workflows/ci.yml (header comment) | Says the job lints, builds and runs the unit tests in a few minutes instead of "~15s" | The job now builds and tests C++ | #68 |
 | CONTRIBUTING.md (Getting started) | Tool table adds cmake, ninja and LLVM rows; adds `make setup` and a pointer to docs/development.md | The C++ build needs them | #68 |
-| CONTRIBUTING.md tool-install table (node row) | Says node 22 or later instead of any LTS | The pinned markdownlint-cli2 0.23.3 requires Node.js 22 or later | #72 |
+| CONTRIBUTING.md tool-install table (node row) | Says node 22 or later instead of any LTS | The pinned markdownlint-cli2 0.24.0 requires Node.js 22 or later | #72 |
 | Makefile `ci-tools` help text | Says the target installs Linux x86_64 binaries and runs locally with `ALLOW_LOCAL_INSTALL=1`, instead of "CI only" | The README's Getting started uses it to install the pinned tools on a Linux x86_64 development machine | #72 |
 | Makefile | New `test-install` target: installs `build/dev` into `build/install-test/prefix`, builds and runs `tests/consumer` against it with `find_package()`, and checks that `find_package()` fails without `CMAKE_PREFIX_PATH` and for another major version; not part of `test` or `verify` | Checks the installed CMake package the way a downstream project uses it | #74 |
 | .github/workflows/ci.yml | A `Test the installed package` step after `Run CI` runs `make test-install` | CI checks the installed package while `make ci-pr` stays an alias of `make verify` | #74 |
