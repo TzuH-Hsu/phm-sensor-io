@@ -3,6 +3,6 @@
 # Ninja publishes no checksum file, so its row ends with a comment
 # `# sha256 <digest of ninja-linux.zip>`; update the digest with the version.
 # scripts/check-tool-versions.sh ignores the comment; the installer verifies it.
-syft 1.55.0 github:anchore/syft
+syft 1.57.1 github:anchore/syft
 cmake 4.4.5 github:Kitware/CMake
 ninja 1.13.2 github:ninja-build/ninja # sha256 5749cbc4e668273514150a80e387a957f933c6ed3f5f11e03fb30955e2bbead6
